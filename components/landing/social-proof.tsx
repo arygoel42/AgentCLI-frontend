@@ -1,19 +1,17 @@
 "use client"
 
-const companies = [
-  { name: "Coinbase", color: "#0052FF" },
-  { name: "Notion", color: "#FFFFFF" },
-  { name: "Amazon", color: "#FF9900" },
-  { name: "Google", color: "#4285F4" },
-  { name: "Mercor", color: "#6366F1" },
-  { name: "InboxPilot", color: "#10B981" },
-]
-
 function CoinbaseLogo() {
   return (
-    <svg viewBox="0 0 1024 1024" className="w-6 h-6" fill="none">
-      <circle cx="512" cy="512" r="512" fill="#0052FF"/>
-      <path d="M512 192C335.3 192 192 335.3 192 512s143.3 320 320 320 320-143.3 320-320S688.7 192 512 192zm0 534c-118.2 0-214-95.8-214-214s95.8-214 214-214 214 95.8 214 214-95.8 214-214 214z" fill="#fff"/>
+    <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none">
+      <circle cx="12" cy="12" r="12" fill="#0052FF" />
+      {/* White C: arc from upper-right, all the way round, to lower-right */}
+      <path
+        d="M18.7 5.3 A9.5 9.5 0 1 0 18.7 18.7"
+        stroke="white"
+        strokeWidth="3"
+        strokeLinecap="round"
+        fill="none"
+      />
     </svg>
   )
 }
@@ -29,16 +27,31 @@ function NotionLogo() {
 
 function AmazonLogo() {
   return (
-    <svg viewBox="0 0 603 182" className="w-20 h-6" fill="none">
-      <path d="M374.1 142.5c-35.5 26.2-87 40.2-131.3 40.2-62.1 0-118-23-160.3-61.2-3.3-3-0.3-7.1 3.7-4.8 45.7 26.6 102.1 42.6 160.4 42.6 39.3 0 82.6-8.2 122.4-25 6-2.6 11 3.9 5.1 8.2z" fill="#FF9900"/>
-      <path d="M388.8 125.8c-4.5-5.8-30.1-2.7-41.6-1.4-3.5 0.4-4-2.6-0.9-4.8 20.4-14.3 53.8-10.2 57.7-5.4 3.9 4.9-1 38.7-20.1 54.8-2.9 2.5-5.7 1.2-4.4-2.1 4.3-10.7 13.9-34.8 9.3-41.1z" fill="#FF9900"/>
-      <path d="M348.1 20.4V6.3c0-2.1 1.6-3.6 3.6-3.6h63.5c2 0 3.6 1.6 3.6 3.6v12.1c0 2-1.7 4.6-4.7 8.7l-32.9 47c12.2-0.3 25.1 1.5 36.2 7.7 2.5 1.4 3.2 3.5 3.4 5.5v15c0 2.1-2.3 4.5-4.7 3.2-19.6-10.3-45.6-11.4-67.3 0.1-2.2 1.2-4.5-1.1-4.5-3.2v-14.3c0-2.3 0-6.2 2.4-9.7l38.1-54.6h-33.2c-2 0-3.5-1.5-3.5-3.6z" fill="#fff"/>
-      <path d="M124.7 98.4h-19.3c-1.8-0.1-3.3-1.5-3.5-3.2V6.6c0-1.9 1.6-3.5 3.6-3.5h18c1.9 0.1 3.4 1.6 3.5 3.4v11.7h0.4c4.7-11.6 13.5-17 25.4-17 12.1 0 19.7 5.4 25.1 17 4.7-11.6 15.3-17 26.7-17 8.1 0 17 3.3 22.4 10.8 6.1 8.3 4.9 20.4 4.9 31l0 51.8c0 1.9-1.6 3.5-3.6 3.5h-19.2c-1.9-0.1-3.4-1.7-3.4-3.5V47.5c0-4.2 0.4-14.6-0.5-18.5-1.4-6.6-5.7-8.4-11.2-8.4-4.6 0-9.4 3.1-11.4 8-2 5-1.8 13.3-1.8 18.9v47.4c0 1.9-1.6 3.5-3.6 3.5h-19.2c-1.9-0.1-3.4-1.7-3.4-3.5l0-47.5c0-11 1.8-27.2-11.7-27.2-13.7 0-13.2 15.8-13.2 27.2v47.4c0 1.9-1.6 3.5-3.6 3.5z" fill="#fff"/>
-      <path d="M469.7 1.2c28.6 0 44.1 24.6 44.1 55.8 0 30.2-17.1 54.1-44.1 54.1-28.1 0-43.4-24.6-43.4-55.2 0-30.7 15.5-54.7 43.4-54.7zm0.2 20.2c-14.2 0-15.1 19.4-15.1 31.5 0 12.1-0.2 37.9 14.9 37.9 14.9 0 15.6-20.8 15.6-33.5 0-8.4-0.4-18.4-2.9-26.3-2.2-6.9-6.5-9.6-12.5-9.6z" fill="#fff"/>
-      <path d="M549 98.4h-19.2c-1.9-0.1-3.4-1.7-3.4-3.5l0-88.4c0.2-1.8 1.7-3.2 3.6-3.2h17.9c1.7 0.1 3.1 1.3 3.4 2.9v13.5h0.4c5.3-12.4 12.8-18.3 25.9-18.3 8.7 0 17.1 3.1 22.6 11.6 5.1 7.9 5.1 21.2 5.1 30.7v51.5c-0.2 1.7-1.8 3.1-3.6 3.1h-19.3c-1.7-0.1-3.2-1.4-3.4-3.1V46.3c0-10.8 1.2-26.5-11.9-26.5-4.6 0-8.9 3.1-11 7.8-2.6 5.9-3 11.8-3 19.1v48c0 1.9-1.6 3.5-3.6 3.5h0.5z" fill="#fff"/>
-      <path d="M300 55.4c0 7.5 0.2 13.7-3.6 20.4-3.1 5.4-8 8.7-13.4 8.7-7.5 0-11.9-5.7-11.9-14.1 0-16.6 14.9-19.6 28.9-19.6v4.6zm19.6 47.4c-1.3 1.1-3.1 1.2-4.6 0.5-6.4-5.3-7.6-7.8-11.1-12.9-10.6 10.8-18.1 14.1-31.9 14.1-16.3 0-29-10.1-29-30.2 0-15.7 8.5-26.4 20.6-31.6 10.5-4.6 25.2-5.4 36.5-6.7v-2.5c0-4.6 0.4-10-2.3-14-2.4-3.6-7-5.1-11-5.1-7.5 0-14.2 3.8-15.8 11.8-0.3 1.8-1.6 3.5-3.4 3.6l-18.7-2c-1.6-0.4-3.4-1.6-2.9-4.1 4.4-23 25.1-29.9 43.7-29.9 9.5 0 21.9 2.5 29.4 9.7 9.5 8.9 8.6 20.7 8.6 33.6v30.4c0 9.1 3.8 13.1 7.4 18.1 1.2 1.8 1.5 3.9-0.1 5.2-4 3.3-11.1 9.5-15 13l-0.4-0.5z" fill="#fff"/>
-      <path d="M55.2 55.4c0 7.5 0.2 13.7-3.6 20.4-3.1 5.4-8 8.7-13.4 8.7-7.5 0-11.8-5.7-11.8-14.1 0-16.6 14.9-19.6 28.8-19.6v4.6zm19.6 47.4c-1.3 1.1-3.1 1.2-4.6 0.5-6.4-5.3-7.5-7.8-11.1-12.9-10.6 10.8-18.1 14.1-31.9 14.1C10.9 104.5-2 94.4-2 74.3c0-15.7 8.5-26.4 20.7-31.6 10.5-4.6 25.2-5.4 36.4-6.7v-2.5c0-4.6 0.4-10-2.3-14-2.4-3.6-7-5.1-11-5.1-7.5 0-14.1 3.8-15.8 11.8-0.3 1.8-1.6 3.5-3.4 3.6L4 27.8c-1.6-0.4-3.3-1.6-2.9-4.1C5.5 0.7 26.3-6.2 44.9-6.2c9.5 0 21.9 2.5 29.4 9.7 9.5 8.9 8.6 20.7 8.6 33.6v30.4c0 9.1 3.8 13.1 7.4 18.1 1.3 1.8 1.5 3.9-0.1 5.2-4 3.3-11.1 9.5-15 13l-0.4-0.5z" fill="#fff"/>
-    </svg>
+    <div className="flex flex-col items-center gap-[3px]">
+      <span
+        className="text-white font-bold leading-none tracking-tight"
+        style={{ fontFamily: "Arial, Helvetica, sans-serif", fontSize: "18px" }}
+      >
+        amazon
+      </span>
+      <svg viewBox="0 0 72 10" className="w-[68px] h-[9px]" fill="none">
+        <path
+          d="M4 5 Q36 14 68 5"
+          stroke="#FF9900"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          fill="none"
+        />
+        <path
+          d="M62 2.5 L68 5 L62 7.5"
+          stroke="#FF9900"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+        />
+      </svg>
+    </div>
   )
 }
 
@@ -57,27 +70,45 @@ function GoogleLogo() {
 
 function MercorLogo() {
   return (
-    <svg viewBox="0 0 120 32" className="w-16 h-5" fill="none">
-      <text x="0" y="24" fontFamily="system-ui, sans-serif" fontSize="24" fontWeight="600" fill="#6366F1">Mercor</text>
-    </svg>
+    <div className="flex items-center gap-2">
+      <svg viewBox="0 0 20 20" className="w-5 h-5" fill="none">
+        <circle cx="10" cy="10" r="9" stroke="#818cf8" strokeWidth="2" fill="none" />
+        <circle cx="10" cy="10" r="3.5" fill="#818cf8" />
+      </svg>
+      <span
+        className="font-semibold leading-none tracking-tight text-white/90"
+        style={{ fontFamily: "system-ui, sans-serif", fontSize: "17px" }}
+      >
+        mercor
+      </span>
+    </div>
   )
 }
 
 function InboxPilotLogo() {
   return (
-    <svg viewBox="0 0 140 32" className="w-20 h-5" fill="none">
-      <text x="0" y="24" fontFamily="system-ui, sans-serif" fontSize="22" fontWeight="600" fill="#10B981">InboxPilot</text>
-    </svg>
+    <div className="flex items-center gap-1.5">
+      <svg viewBox="0 0 20 20" className="w-5 h-5" fill="none">
+        <rect x="2" y="5" width="16" height="12" rx="2" stroke="#34d399" strokeWidth="1.8" fill="none" />
+        <path d="M2 8l8 5 8-5" stroke="#34d399" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+      </svg>
+      <span
+        className="font-semibold leading-none tracking-tight text-white/90"
+        style={{ fontFamily: "system-ui, sans-serif", fontSize: "16px" }}
+      >
+        InboxPilot
+      </span>
+    </div>
   )
 }
 
 const companyLogos = [
-  { name: "Coinbase", Logo: CoinbaseLogo, color: "#0052FF" },
-  { name: "Notion", Logo: NotionLogo, color: "#FFFFFF" },
-  { name: "Amazon", Logo: AmazonLogo, color: "#FF9900" },
-  { name: "Google", Logo: GoogleLogo, color: "#4285F4" },
-  { name: "Mercor", Logo: MercorLogo, color: "#6366F1" },
-  { name: "InboxPilot", Logo: InboxPilotLogo, color: "#10B981" },
+  { name: "Coinbase", Logo: CoinbaseLogo },
+  { name: "Notion", Logo: NotionLogo },
+  { name: "Amazon", Logo: AmazonLogo },
+  { name: "Google", Logo: GoogleLogo },
+  { name: "Mercor", Logo: MercorLogo },
+  { name: "InboxPilot", Logo: InboxPilotLogo },
 ]
 
 export function SocialProof() {

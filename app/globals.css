@@ -136,3 +136,8 @@
 .animate-scroll {
   animation: scroll 20s linear infinite;
 }
+
+@keyframes terminal-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
