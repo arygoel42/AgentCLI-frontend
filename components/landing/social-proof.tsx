@@ -108,7 +108,6 @@ const companyLogos = [
   { name: "Amazon", Logo: AmazonLogo },
   { name: "Google", Logo: GoogleLogo },
   { name: "Mercor", Logo: MercorLogo },
-  { name: "InboxPilot", Logo: InboxPilotLogo },
 ]
 
 export function SocialProof() {
