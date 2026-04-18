@@ -1,9 +1,14 @@
 "use client"
 
+import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Terminal } from "lucide-react"
+import { LoginDialog } from "@/components/auth/login-dialog"
+import { UserMenu } from "@/components/auth/user-menu"
 
 export function Navbar() {
+  const { status } = useSession()
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
@@ -25,12 +30,27 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" className="text-sm">
-            Sign in
-          </Button>
-          <Button size="sm" className="text-sm">
-            Get started
-          </Button>
+          {status === "authenticated" ? (
+            <>
+              <Button variant="ghost" size="sm" asChild>
+                <a href="/dashboard" className="text-sm">Dashboard</a>
+              </Button>
+              <UserMenu />
+            </>
+          ) : (
+            <>
+              <LoginDialog>
+                <Button variant="ghost" size="sm" className="text-sm">
+                  Sign in
+                </Button>
+              </LoginDialog>
+              <LoginDialog>
+                <Button size="sm" className="text-sm">
+                  Get started
+                </Button>
+              </LoginDialog>
+            </>
+          )}
         </div>
       </div>
     </nav>
