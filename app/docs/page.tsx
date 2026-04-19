@@ -3,22 +3,22 @@ import { CodeBlock, CodeTabs } from "@/components/docs/code-block"
 import { InteractiveTerminal } from "@/components/docs/terminal"
 import { ApiExplorer } from "@/components/docs/api-explorer"
 import Link from "next/link"
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, Leaf } from "lucide-react"
 
-// ─── Terminal demo lines ──────────────────────────────────────────────────────
+// Terminal demo lines
 
 const quickstartLines = [
   { type: "comment" as const, text: "# 1. Create a CLI definition" },
-  { type: "input" as const, text: `curl -X POST https://api.clicreator.dev/v1/clis \\` },
-  { type: "output" as const, text: `  -H "Authorization: Bearer clicreator_pk_..." \\`, delay: 80 },
+  { type: "input" as const, text: `curl -X POST https://api.petl.dev/v1/clis \\` },
+  { type: "output" as const, text: `  -H "Authorization: Bearer petl_pk_..." \\`, delay: 80 },
   { type: "output" as const, text: `  -d '{"name":"acme","module_path":"github.com/acme/acme-cli","env_prefix":"ACME"}'`, delay: 80 },
-  { type: "output" as const, text: `\n{ "id": "cli_01j...", "telemetry_token": "clicreator_tok_..." }`, delay: 400 },
+  { type: "output" as const, text: `\n{ "id": "cli_01j...", "telemetry_token": "petl_tok_..." }`, delay: 400 },
   { type: "comment" as const, text: "\n# 2. Upload your OpenAPI spec", delay: 600 },
-  { type: "input" as const, text: `curl -X POST https://api.clicreator.dev/v1/clis/cli_01j.../versions \\`, delay: 300 },
+  { type: "input" as const, text: `curl -X POST https://api.petl.dev/v1/clis/cli_01j.../versions \\`, delay: 300 },
   { type: "output" as const, text: `  -F "spec=@openapi.yaml" -F "version=1.0.0"`, delay: 80 },
   { type: "output" as const, text: `\n{ "status": "building", "version": "1.0.0" }`, delay: 500 },
   { type: "comment" as const, text: "\n# 3. Download and ship your binary", delay: 600 },
-  { type: "input" as const, text: `curl -L https://api.clicreator.dev/v1/clis/acme/versions/1.0.0/download/darwin_arm64 -o acme`, delay: 300 },
+  { type: "input" as const, text: `curl -L https://api.petl.dev/v1/clis/acme/versions/1.0.0/download/darwin_arm64 -o acme`, delay: 300 },
   { type: "output" as const, text: `\n✓ Binary ready. chmod +x acme && ./acme --help`, delay: 600 },
 ]
 
@@ -37,14 +37,14 @@ const telemetryLines = [
   { type: "output" as const, text: `}`, delay: 100 },
 ]
 
-// ─── Sample API responses ──────────────────────────────────────────────────────
+// Sample API responses
 
 const CLI_RESPONSE = `{
   "id": "cli_01j9x2m4k3n5p6q7r8s9t0u1v",
   "name": "acme",
   "module_path": "github.com/acme/acme-cli",
   "env_prefix": "ACME",
-  "telemetry_token": "clicreator_tok_4xKm9Rp2q...",
+  "telemetry_token": "petl_tok_4xKm9Rp2q...",
   "current_version": "1.2.0",
   "created_at": "2026-04-01T00:00:00Z"
 }`
@@ -65,9 +65,9 @@ const VERSION_RESPONSE = `{
   "version": "1.0.0",
   "status": "ready",
   "artifacts": {
-    "linux_amd64": "https://cdn.clicreator.dev/acme/1.0.0/acme_linux_amd64",
-    "darwin_arm64": "https://cdn.clicreator.dev/acme/1.0.0/acme_darwin_arm64",
-    "windows_amd64": "https://cdn.clicreator.dev/acme/1.0.0/acme_windows_amd64.exe"
+    "linux_amd64": "https://cdn.petl.dev/acme/1.0.0/acme_linux_amd64",
+    "darwin_arm64": "https://cdn.petl.dev/acme/1.0.0/acme_darwin_arm64",
+    "windows_amd64": "https://cdn.petl.dev/acme/1.0.0/acme_windows_amd64.exe"
   },
   "published_at": "2026-04-01T00:00:00Z"
 }`
@@ -98,7 +98,7 @@ const COMMANDS_RESPONSE = `{
   ]
 }`
 
-// ─── Page ──────────────────────────────────────────────────────────────────────
+// Page
 
 export default function DocsPage() {
   return (
@@ -106,13 +106,19 @@ export default function DocsPage() {
       {/* Top bar */}
       <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur">
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="text-sm font-semibold">CLICreator</Link>
+          <Link href="/" className="flex items-center gap-1.5">
+            <Leaf className="w-4 h-4" style={{ color: "var(--green)" }} />
+            <span className="font-bold tracking-tight text-lg">
+              pe<span style={{ color: "var(--green)" }}>t</span>l
+            </span>
+          </Link>
           <nav className="flex items-center gap-6 text-sm text-muted-foreground">
             <span className="text-foreground font-medium">Docs</span>
             <Link href="/dashboard" className="hover:text-foreground transition-colors">Dashboard</Link>
             <Link
               href="/dashboard"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-foreground text-background text-xs hover:bg-foreground/90 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition-colors"
+              style={{ backgroundColor: "var(--green)", color: "#000" }}
             >
               Get started <ArrowRight className="w-3 h-3" />
             </Link>
@@ -126,8 +132,8 @@ export default function DocsPage() {
         {/* Content */}
         <main className="flex-1 min-w-0 space-y-20">
 
-          {/* ── Quickstart ───────────────────────────────────────────────── */}
-          <section id="quickstart" className="scroll-mt-20 space-y-6">
+          
+          <section id="quickstart" className="scroll-mt-[72px] space-y-6">
             <div>
               <div className="inline-flex items-center gap-2 text-xs font-medium text-muted-foreground mb-3">
                 Getting Started
@@ -135,7 +141,7 @@ export default function DocsPage() {
               <h1 className="text-3xl font-bold">Quickstart</h1>
               <p className="mt-3 text-muted-foreground leading-relaxed">
                 Turn your OpenAPI spec into a production-ready CLI in under 5 minutes.
-                No Go experience required — CLICreator handles generation, building, and distribution.
+                No Go experience required — petl handles generation, building, and distribution.
               </p>
             </div>
 
@@ -156,8 +162,8 @@ export default function DocsPage() {
             <InteractiveTerminal lines={quickstartLines} />
           </section>
 
-          {/* ── Core Concepts ─────────────────────────────────────────────── */}
-          <section id="concepts" className="scroll-mt-20 space-y-6">
+          
+          <section id="concepts" className="scroll-mt-[72px] space-y-6">
             <div>
               <h2 className="text-2xl font-bold">Core Concepts</h2>
               <p className="mt-2 text-muted-foreground">Three objects you&apos;ll work with constantly.</p>
@@ -200,8 +206,8 @@ export default function DocsPage() {
             </div>
           </section>
 
-          {/* ── Authentication ────────────────────────────────────────────── */}
-          <section id="authentication" className="scroll-mt-20 space-y-6">
+          
+          <section id="authentication" className="scroll-mt-[72px] space-y-6">
             <div>
               <div className="text-xs text-muted-foreground mb-3">API Reference</div>
               <h2 className="text-2xl font-bold">Authentication</h2>
@@ -212,7 +218,7 @@ export default function DocsPage() {
 
             <CodeBlock
               language="bash"
-              code={`Authorization: Bearer clicreator_pk_<your-key>`}
+              code={`Authorization: Bearer petl_pk_<your-key>`}
             />
 
             <p className="text-sm text-muted-foreground">
@@ -240,8 +246,8 @@ export default function DocsPage() {
             </div>
           </section>
 
-          {/* ── CLIs API ──────────────────────────────────────────────────── */}
-          <section id="clis" className="scroll-mt-20 space-y-6">
+          
+          <section id="clis" className="scroll-mt-[72px] space-y-6">
             <div>
               <h2 className="text-2xl font-bold">CLIs</h2>
               <p className="mt-2 text-muted-foreground">Create and manage your CLI definitions.</p>
@@ -275,8 +281,8 @@ export default function DocsPage() {
             </div>
           </section>
 
-          {/* ── Versions API ──────────────────────────────────────────────── */}
-          <section id="versions" className="scroll-mt-20 space-y-6">
+          
+          <section id="versions" className="scroll-mt-[72px] space-y-6">
             <div>
               <h2 className="text-2xl font-bold">Versions</h2>
               <p className="mt-2 text-muted-foreground">
@@ -285,7 +291,7 @@ export default function DocsPage() {
             </div>
 
             <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-xs text-amber-400">
-              Uploads are <code>multipart/form-data</code>. The <code>spec</code> field is your OpenAPI YAML file. The optional <code>config</code> field is a <code>clicreator.yml</code> for command tree overrides.
+              Uploads are <code>multipart/form-data</code>. The <code>spec</code> field is your OpenAPI YAML file. The optional <code>config</code> field is a <code>petl.yml</code> for command tree overrides.
             </div>
 
             <div className="space-y-2">
@@ -348,8 +354,8 @@ export default function DocsPage() {
             </div>
           </section>
 
-          {/* ── Metrics API ───────────────────────────────────────────────── */}
-          <section id="metrics" className="scroll-mt-20 space-y-6">
+          
+          <section id="metrics" className="scroll-mt-[72px] space-y-6">
             <div>
               <h2 className="text-2xl font-bold">Metrics</h2>
               <p className="mt-2 text-muted-foreground">
@@ -388,8 +394,8 @@ export default function DocsPage() {
             </div>
           </section>
 
-          {/* ── Telemetry overview ────────────────────────────────────────── */}
-          <section id="telemetry-overview" className="scroll-mt-20 space-y-6">
+          
+          <section id="telemetry-overview" className="scroll-mt-[72px] space-y-6">
             <div>
               <div className="text-xs text-muted-foreground mb-3">Telemetry</div>
               <h2 className="text-2xl font-bold">How It Works</h2>
@@ -415,8 +421,8 @@ export default function DocsPage() {
             </div>
           </section>
 
-          {/* ── Privacy ───────────────────────────────────────────────────── */}
-          <section id="privacy" className="scroll-mt-20 space-y-6">
+          
+          <section id="privacy" className="scroll-mt-[72px] space-y-6">
             <div>
               <h2 className="text-2xl font-bold">Privacy Model</h2>
               <p className="mt-2 text-muted-foreground">
@@ -445,8 +451,8 @@ export default function DocsPage() {
             </div>
           </section>
 
-          {/* ── Event Schema ──────────────────────────────────────────────── */}
-          <section id="event-schema" className="scroll-mt-20 space-y-6">
+          
+          <section id="event-schema" className="scroll-mt-[72px] space-y-6">
             <div>
               <h2 className="text-2xl font-bold">Event Schema</h2>
               <p className="mt-2 text-muted-foreground">
@@ -461,7 +467,7 @@ export default function DocsPage() {
                   language: "json",
                   code: `{
   // Identity
-  "cli_id":      "clicreator_tok_...",  // maps to your CLI
+  "cli_id":      "petl_tok_...",  // maps to your CLI
   "cli_name":    "acme",
   "cli_version": "1.2.0",
 

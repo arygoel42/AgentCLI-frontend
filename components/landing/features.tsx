@@ -31,8 +31,8 @@ export function Features() {
       <div className="max-w-4xl mx-auto space-y-20">
         {/* Heading */}
         <div className="space-y-3">
-          <p className="text-xs tracking-widest uppercase text-muted-foreground">
-            Why api2cli
+          <p className="text-xs tracking-widest uppercase" style={{ color: "var(--green)" }}>
+            Why petl
           </p>
           <h2 className="text-3xl md:text-4xl font-medium tracking-tight">
             Build CLIs agents love
@@ -44,14 +44,17 @@ export function Features() {
           {features.map((f) => (
             <div key={f.index} className="grid md:grid-cols-[80px_1fr] gap-6 md:gap-12">
               {/* Index */}
-              <div className="text-sm font-mono text-muted-foreground/50 pt-1 select-none">
+              <div className="text-sm font-mono pt-1 select-none" style={{ color: "var(--green)", opacity: 0.6 }}>
                 {f.index}
               </div>
 
               {/* Content */}
               <div className="space-y-4">
                 <div className="inline-flex items-center gap-2">
-                  <span className="text-xs font-mono px-2 py-0.5 rounded-md bg-secondary text-muted-foreground border border-border/60">
+                  <span
+                    className="text-xs font-mono px-2 py-0.5 rounded-md"
+                    style={{ color: "var(--green)", backgroundColor: "var(--green-glow)", border: "1px solid var(--green-border)" }}
+                  >
                     {f.tag}
                   </span>
                 </div>
@@ -61,7 +64,7 @@ export function Features() {
                 </p>
                 {/* Example command */}
                 <div className="flex items-center gap-2 font-mono text-sm text-muted-foreground bg-secondary/40 border border-border/40 rounded-lg px-4 py-2.5 w-fit">
-                  <span className="text-emerald-500/70 select-none">$</span>
+                  <span className="select-none" style={{ color: "var(--green)" }}>$</span>
                   <span>{f.example}</span>
                 </div>
               </div>

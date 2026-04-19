@@ -42,7 +42,7 @@ export function ApiExplorer({ method, endpoint, description, fields = [], sample
       return acc.replace(`:${f.name}`, values[f.name] || `:${f.name}`)
     }, endpoint)
 
-    let curl = `curl -X ${method} https://api.clicreator.dev${ep} \\\n  -H "Authorization: Bearer clicreator_pk_..." \\\n  -H "Content-Type: application/json"`
+    let curl = `curl -X ${method} https://api.petl.dev${ep} \\\n  -H "Authorization: Bearer petl_pk_..." \\\n  -H "Content-Type: application/json"`
     if (bodyObj) curl += ` \\\n  -d '${JSON.stringify(bodyObj, null, 2)}'`
     return curl
   }
@@ -98,7 +98,8 @@ export function ApiExplorer({ method, endpoint, description, fields = [], sample
             </pre>
             <button
               onClick={() => setRan(true)}
-              className="flex items-center gap-2 text-xs px-3 py-1.5 rounded bg-foreground text-background hover:bg-foreground/90 transition-colors"
+              className="flex items-center gap-2 text-xs px-3 py-1.5 rounded transition-colors"
+              style={{ backgroundColor: "var(--green)", color: "#000" }}
             >
               <Play className="w-3 h-3" />
               Run example
@@ -108,7 +109,7 @@ export function ApiExplorer({ method, endpoint, description, fields = [], sample
           {ran && (
             <div className="p-4 space-y-3">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Sample response <span className="text-emerald-400 ml-2">200 OK</span>
+                Sample response <span className="ml-2" style={{ color: "var(--green)" }}>200 OK</span>
               </p>
               <pre className="bg-[#0d0d0d] rounded p-3 text-xs font-mono text-zinc-300 overflow-x-auto">
                 {sampleResponse}

@@ -191,15 +191,15 @@ export function Hero() {
       {/* Hero content */}
       <div className="max-w-3xl mx-auto text-center space-y-8 relative z-10">
         <h1 className="text-4xl md:text-6xl lg:text-7xl font-medium tracking-tight text-balance">
-          Turn any API into an AI-native CLI
+          Turn any <span style={{ color: "var(--green)" }}>API</span> into an AI-native CLI
         </h1>
-        
+
         <p className="text-muted-foreground text-lg md:text-xl">
-          OpenAPI in → production-ready CLI out.
+          <span style={{ color: "var(--green)", opacity: 0.9 }}>OpenAPI</span> in → production-ready CLI out.
         </p>
-        
+
         <div className="pt-4">
-          <Button size="lg" className="gap-2 text-base px-8">
+          <Button size="lg" className="gap-2 text-base px-8" style={{ backgroundColor: "var(--green)", color: "#000", border: "none" }}>
             Generate your CLI
             <ArrowRight className="w-4 h-4" />
           </Button>

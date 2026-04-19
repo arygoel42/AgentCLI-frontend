@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 const faqs = [
   {
     q: "How is this different from an MCP?",
-    a: "MCPs expose tools over a JSON-RPC protocol and typically run as a sidecar process. api2cli generates a standalone binary — no server, no protocol overhead. Agents invoke it like any shell command and get structured JSON back. It composes with pipes, works in CI, and doesn't inflate your token budget.",
+    a: "MCPs expose tools over a JSON-RPC protocol and typically run as a sidecar process. petl generates a standalone binary — no server, no protocol overhead. Agents invoke it like any shell command and get structured JSON back. It composes with pipes, works in CI, and doesn't inflate your token budget.",
   },
   {
     q: "Do I need to write any code?",
@@ -44,9 +44,10 @@ function FaqItem({ q, a }: { q: string; a: string }) {
         </span>
         <span
           className={cn(
-            "shrink-0 text-muted-foreground transition-transform duration-200 select-none text-lg leading-none",
+            "shrink-0 transition-transform duration-200 select-none text-lg leading-none",
             open && "rotate-45"
           )}
+          style={{ color: open ? "var(--green)" : undefined }}
         >
           +
         </span>
@@ -68,7 +69,7 @@ export function Faq() {
     <section className="px-6 py-24 border-t border-border/40">
       <div className="max-w-3xl mx-auto space-y-10">
         <div className="space-y-3">
-          <p className="text-xs tracking-widest uppercase text-muted-foreground">FAQ</p>
+          <p className="text-xs tracking-widest uppercase" style={{ color: "var(--green)" }}>FAQ</p>
           <h2 className="text-3xl md:text-4xl font-medium tracking-tight">
             Common questions
           </h2>

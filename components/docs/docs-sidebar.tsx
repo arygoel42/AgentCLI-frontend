@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 
 export const sections = [
@@ -30,43 +30,44 @@ export const sections = [
   },
 ]
 
-const HEADER_HEIGHT = 56 // px — matches the h-14 header
+const allIds = sections.flatMap(s => s.items.map(i => i.id))
 
 export function DocsSidebar() {
   const [active, setActive] = useState("quickstart")
+  // Track which sections are currently visible
+  const visibleRef = useRef<Set<string>>(new Set())
 
   useEffect(() => {
-    const allItems = sections.flatMap(s => s.items)
-
-    function onScroll() {
-      // Find the last section whose top is above the midpoint of the viewport
-      const midpoint = window.scrollY + window.innerHeight * 0.3
-
-      let current = allItems[0].id
-      for (const item of allItems) {
-        const el = document.getElementById(item.id)
-        if (!el) continue
-        if (el.offsetTop - HEADER_HEIGHT <= midpoint) {
-          current = item.id
-        }
+    const observer = new IntersectionObserver(
+      entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            visibleRef.current.add(entry.target.id)
+          } else {
+            visibleRef.current.delete(entry.target.id)
+          }
+        })
+        // Pick the topmost visible section in document order
+        const topmost = allIds.find(id => visibleRef.current.has(id))
+        if (topmost) setActive(topmost)
+      },
+      {
+        // Trigger when section enters the top 30% of the viewport
+        rootMargin: "-56px 0px -60% 0px",
+        threshold: 0,
       }
-      setActive(current)
-    }
+    )
 
-    window.addEventListener("scroll", onScroll, { passive: true })
-    onScroll() // set initial active on mount
-    return () => window.removeEventListener("scroll", onScroll)
+    allIds.forEach(id => {
+      const el = document.getElementById(id)
+      if (el) observer.observe(el)
+    })
+
+    return () => observer.disconnect()
   }, [])
 
-  function scrollTo(id: string) {
-    const el = document.getElementById(id)
-    if (!el) return
-    const top = el.getBoundingClientRect().top + window.scrollY - HEADER_HEIGHT - 16
-    window.scrollTo({ top, behavior: "smooth" })
-  }
-
   return (
-    <aside className="w-52 shrink-0 sticky top-16 self-start hidden lg:block">
+    <aside className="w-52 shrink-0 sticky top-[72px] self-start hidden lg:block max-h-[calc(100vh-88px)] overflow-y-auto">
       <nav className="space-y-6">
         {sections.map(section => (
           <div key={section.title}>
@@ -76,17 +77,17 @@ export function DocsSidebar() {
             <ul className="space-y-1">
               {section.items.map(item => (
                 <li key={item.id}>
-                  <button
-                    onClick={() => scrollTo(item.id)}
+                  <a
+                    href={`#${item.id}`}
                     className={cn(
-                      "text-sm w-full text-left px-2 py-1 rounded transition-colors",
+                      "block text-sm w-full text-left px-2 py-1 rounded transition-colors",
                       active === item.id
                         ? "text-foreground font-medium bg-muted"
                         : "text-muted-foreground hover:text-foreground"
                     )}
                   >
                     {item.label}
-                  </button>
+                  </a>
                 </li>
               ))}
             </ul>

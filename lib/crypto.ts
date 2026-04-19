@@ -2,7 +2,7 @@ import { randomBytes, createHash } from "crypto"
 
 export function generateApiKey(): string {
   const random = randomBytes(24).toString("base64url")
-  return `clicreator_pk_${random}`
+  return `petl_pk_${random}`
 }
 
 // SHA-256 is appropriate here — API keys are long random strings, not passwords

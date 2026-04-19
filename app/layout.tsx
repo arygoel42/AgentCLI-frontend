@@ -8,7 +8,7 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'API to CLI | Turn any API into an AI-native CLI',
+  title: 'petl | Turn any API into an AI-native CLI',
   description: 'OpenAPI in, production-ready CLI out. Built for the agent era.',
   generator: 'v0.app',
   icons: {
@@ -36,7 +36,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark scroll-smooth">
       <body className="font-sans antialiased">
         <AuthSessionProvider>
           {children}

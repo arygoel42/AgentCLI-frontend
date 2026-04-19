@@ -42,20 +42,21 @@ export function ApiKeyManager({ hasKey: initialHasKey, hint: initialHint }: Prop
   // No key yet — prompt to create
   if (!hasKey) {
     return (
-      <div className="rounded-lg border border-border p-8 flex flex-col items-center text-center gap-4 max-w-md">
-        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-          <KeyRound className="w-5 h-5 text-muted-foreground" />
+      <div className="rounded-lg border p-8 flex flex-col items-center text-center gap-4 max-w-md" style={{ borderColor: "var(--green-border)" }}>
+        <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: "var(--green-glow)" }}>
+          <KeyRound className="w-5 h-5" style={{ color: "var(--green)" }} />
         </div>
         <div>
           <p className="text-sm font-medium">No API key yet</p>
           <p className="text-xs text-muted-foreground mt-1">
-            Generate a key to call the CLICreator API from scripts or CI pipelines.
+            Generate a key to call the petl API from scripts or CI pipelines.
           </p>
         </div>
         <button
           onClick={handleCreate}
           disabled={loading}
-          className="text-sm px-4 py-2 rounded-md bg-foreground text-background hover:bg-foreground/90 transition-colors disabled:opacity-50"
+          className="text-sm px-4 py-2 rounded-md transition-colors disabled:opacity-50"
+          style={{ backgroundColor: "var(--green)", color: "#000" }}
         >
           {loading ? "Generating…" : "Generate API Key"}
         </button>
@@ -103,11 +104,11 @@ export function ApiKeyManager({ hasKey: initialHasKey, hint: initialHint }: Prop
           </div>
           <div className="flex items-center gap-3 bg-muted rounded-md px-3 py-2">
             <code className="text-xs font-mono text-muted-foreground">
-              clicreator_pk_••••••••••••••••••{hint}
+              petl_pk_••••••••••••••••••{hint}
             </code>
           </div>
           <p className="text-xs text-muted-foreground">
-            Pass this in the <code className="text-foreground">Authorization: Bearer</code> header when calling the CLICreator API.
+            Pass this in the <code className="text-foreground">Authorization: Bearer</code> header when calling the petl API.
           </p>
         </div>
       )}

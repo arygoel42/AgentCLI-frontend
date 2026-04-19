@@ -50,7 +50,7 @@ export default async function SettingsPage() {
         <div className="rounded-lg border border-border p-5 space-y-4">
           <h2 className="text-sm font-medium">Provider ID</h2>
           <p className="text-xs text-muted-foreground">
-            Your unique identifier on the CLICreator platform.
+            Your unique identifier on the petl platform.
           </p>
           <div className="flex items-center justify-between gap-3 bg-muted rounded-md px-3 py-2">
             <code className="text-xs font-mono text-muted-foreground truncate">{provider.id}</code>

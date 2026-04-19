@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Terminal, Settings, LogOut, KeyRound } from "lucide-react"
+import { LayoutDashboard, Terminal, Settings, LogOut, KeyRound, Leaf } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
 
@@ -18,29 +18,42 @@ export function Sidebar() {
 
   return (
     <aside className="w-56 shrink-0 border-r border-border bg-background flex flex-col h-screen sticky top-0">
-      <div className="px-4 py-5 border-b border-border">
-        <span className="text-sm font-semibold tracking-tight">CLICreator</span>
+      {/* Logo */}
+      <div className="px-4 py-5 border-b border-border flex items-center gap-2">
+        <Leaf className="w-4 h-4 shrink-0" style={{ color: "var(--green)" }} />
+        <span className="font-bold tracking-tight text-lg">
+          pe<span style={{ color: "var(--green)" }}>t</span>l
+        </span>
       </div>
 
       <nav className="flex-1 px-2 py-4 space-y-1">
-        {nav.map(({ href, label, icon: Icon }) => (
-          <Link
-            key={href}
-            href={href}
-            className={cn(
-              "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
-              pathname === href
-                ? "bg-muted text-foreground font-medium"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-            )}
-          >
-            <Icon className="w-4 h-4 shrink-0" />
-            {label}
-          </Link>
-        ))}
+        {nav.map(({ href, label, icon: Icon }) => {
+          const active = pathname === href
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                active
+                  ? "bg-muted text-foreground font-medium"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              )}
+              style={active ? { color: "var(--green)" } : undefined}
+            >
+              <Icon
+                className="w-4 h-4 shrink-0"
+                style={active ? { color: "var(--green)" } : undefined}
+              />
+              {label}
+            </Link>
+          )
+        })}
       </nav>
 
-      <div className="px-2 py-4 border-t border-border">
+      {/* green accent line above sign out */}
+      <div className="mx-3 h-px" style={{ background: "linear-gradient(to right, var(--green-border), transparent)" }} />
+      <div className="px-2 py-4">
         <button
           onClick={() => signOut({ callbackUrl: "/" })}
           className="flex items-center gap-3 px-3 py-2 w-full rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"

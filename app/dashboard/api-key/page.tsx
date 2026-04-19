@@ -21,7 +21,7 @@ export default async function ApiKeyPage() {
     <div className="p-8 max-w-2xl">
       <h1 className="text-2xl font-semibold">API Key</h1>
       <p className="text-muted-foreground mt-1 text-sm">
-        Authenticate programmatic access to the CLICreator API.
+        Authenticate programmatic access to the petl API.
       </p>
 
       <div className="mt-8">

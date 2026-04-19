@@ -4,14 +4,7 @@ function CoinbaseLogo() {
   return (
     <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none">
       <circle cx="12" cy="12" r="12" fill="#0052FF" />
-      {/* White C: arc from upper-right, all the way round, to lower-right */}
-      <path
-        d="M18.7 5.3 A9.5 9.5 0 1 0 18.7 18.7"
-        stroke="white"
-        strokeWidth="3"
-        strokeLinecap="round"
-        fill="none"
-      />
+      <path d="M18.7 5.3 A9.5 9.5 0 1 0 18.7 18.7" stroke="white" strokeWidth="3" strokeLinecap="round" fill="none" />
     </svg>
   )
 }
@@ -28,28 +21,12 @@ function NotionLogo() {
 function AmazonLogo() {
   return (
     <div className="flex flex-col items-center gap-[3px]">
-      <span
-        className="text-white font-bold leading-none tracking-tight"
-        style={{ fontFamily: "Arial, Helvetica, sans-serif", fontSize: "18px" }}
-      >
+      <span className="text-white font-bold leading-none tracking-tight" style={{ fontFamily: "Arial, Helvetica, sans-serif", fontSize: "18px" }}>
         amazon
       </span>
       <svg viewBox="0 0 72 10" className="w-[68px] h-[9px]" fill="none">
-        <path
-          d="M4 5 Q36 14 68 5"
-          stroke="#FF9900"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          fill="none"
-        />
-        <path
-          d="M62 2.5 L68 5 L62 7.5"
-          stroke="#FF9900"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
+        <path d="M4 5 Q36 14 68 5" stroke="#FF9900" strokeWidth="2.2" strokeLinecap="round" fill="none" />
+        <path d="M62 2.5 L68 5 L62 7.5" stroke="#FF9900" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
       </svg>
     </div>
   )
@@ -75,28 +52,8 @@ function MercorLogo() {
         <circle cx="10" cy="10" r="9" stroke="#818cf8" strokeWidth="2" fill="none" />
         <circle cx="10" cy="10" r="3.5" fill="#818cf8" />
       </svg>
-      <span
-        className="font-semibold leading-none tracking-tight text-white/90"
-        style={{ fontFamily: "system-ui, sans-serif", fontSize: "17px" }}
-      >
+      <span className="font-semibold leading-none tracking-tight text-white/90" style={{ fontFamily: "system-ui, sans-serif", fontSize: "17px" }}>
         mercor
-      </span>
-    </div>
-  )
-}
-
-function InboxPilotLogo() {
-  return (
-    <div className="flex items-center gap-1.5">
-      <svg viewBox="0 0 20 20" className="w-5 h-5" fill="none">
-        <rect x="2" y="5" width="16" height="12" rx="2" stroke="#34d399" strokeWidth="1.8" fill="none" />
-        <path d="M2 8l8 5 8-5" stroke="#34d399" strokeWidth="1.8" strokeLinecap="round" fill="none" />
-      </svg>
-      <span
-        className="font-semibold leading-none tracking-tight text-white/90"
-        style={{ fontFamily: "system-ui, sans-serif", fontSize: "16px" }}
-      >
-        InboxPilot
       </span>
     </div>
   )
@@ -110,28 +67,45 @@ const companyLogos = [
   { name: "Mercor", Logo: MercorLogo },
 ]
 
+// Duplicate enough times that the seam never shows at any viewport width
+const COPIES = 4
+const track = Array.from({ length: COPIES }, () => companyLogos).flat()
+
 export function SocialProof() {
   return (
-    <section className="w-full bg-[#0a0a0a] border-y border-white/10 py-8 overflow-hidden">
+    <section className="w-full bg-[#0a0a0a] border-y border-white/10 py-8">
       <div className="flex flex-col items-center gap-6">
         <p className="text-neutral-500 text-xs tracking-widest uppercase">
           Built by engineers at
         </p>
-        <div className="relative w-full overflow-hidden">
-          <div className="flex animate-scroll">
-            {[...companyLogos, ...companyLogos].map((company, i) => (
+
+        {/* Mask fades the edges so the loop looks seamless */}
+        <div
+          className="w-full overflow-hidden"
+          style={{ maskImage: "linear-gradient(to right, transparent 0%, black 12%, black 88%, transparent 100%)" }}
+        >
+          <div
+            className="flex w-max"
+            style={{ animation: "marquee 28s linear infinite" }}
+          >
+            {track.map((company, i) => (
               <div
                 key={`${company.name}-${i}`}
-                className="flex items-center justify-center px-8 md:px-14 shrink-0"
+                className="flex items-center justify-center px-10 shrink-0 opacity-60 hover:opacity-100 transition-opacity"
               >
-                <div className="opacity-60 hover:opacity-100 transition-opacity">
-                  <company.Logo />
-                </div>
+                <company.Logo />
               </div>
             ))}
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes marquee {
+          from { transform: translateX(0); }
+          to   { transform: translateX(-${100 / COPIES}%); }
+        }
+      `}</style>
     </section>
   )
 }
