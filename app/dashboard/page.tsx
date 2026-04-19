@@ -6,12 +6,13 @@ export default async function DashboardPage() {
   if (!session?.user) redirect("/")
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-6 pt-20">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground mt-2">
-          Welcome back, {session.user.name}
-        </p>
+    <div className="p-8">
+      <h1 className="text-2xl font-semibold">Overview</h1>
+      <p className="text-muted-foreground mt-1">
+        Welcome back, {session.user.name}
+      </p>
+      <div className="mt-8 rounded-lg border border-border p-6 text-sm text-muted-foreground">
+        No CLIs yet. Head to <span className="text-foreground font-medium">My CLIs</span> to create your first one.
       </div>
     </div>
   )
