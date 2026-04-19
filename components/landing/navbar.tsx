@@ -21,7 +21,7 @@ export function Navbar() {
           <a href="#demo" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             Demo
           </a>
-          <a href="#docs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <a href="/docs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             Docs
           </a>
           <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
