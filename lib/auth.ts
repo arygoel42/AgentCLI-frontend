@@ -4,7 +4,6 @@ import GitHub from "next-auth/providers/github"
 import { db } from "@/lib/db/client"
 import { providers } from "@/lib/db/schema"
 import { eq } from "drizzle-orm"
-
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Google({

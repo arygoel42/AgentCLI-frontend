@@ -2,13 +2,14 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Terminal, Settings, LogOut } from "lucide-react"
+import { LayoutDashboard, Terminal, Settings, LogOut, KeyRound } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
 
 const nav = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { href: "/dashboard/clis", label: "My CLIs", icon: Terminal },
+  { href: "/dashboard/api-key", label: "API Key", icon: KeyRound },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ]
 

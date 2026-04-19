@@ -5,6 +5,8 @@ export const providers = pgTable("providers", {
   email: text("email").unique().notNull(),
   name: text("name"),
   avatarUrl: text("avatar_url"),
+  apiKeyHash: text("api_key_hash"),
+  apiKeyHint: text("api_key_hint"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 })
 
