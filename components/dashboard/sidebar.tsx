@@ -6,6 +6,7 @@ import { useEffect, useState } from "react"
 import { FolderOpen, Settings, LogOut, KeyRound, Leaf, PanelLeftClose, PanelLeftOpen } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 const nav = [
   { href: "/dashboard", label: "Projects", icon: FolderOpen },
@@ -83,6 +84,7 @@ export function Sidebar() {
       {/* green accent line above sign out */}
       <div className="mx-3 h-px" style={{ background: "linear-gradient(to right, var(--green-border), transparent)" }} />
       <div className="px-2 py-2 space-y-1">
+        <ThemeToggle variant="full" collapsed={collapsed} />
         <button
           onClick={toggle}
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}

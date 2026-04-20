@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Leaf } from "lucide-react"
 import { LoginDialog } from "@/components/auth/login-dialog"
 import { UserMenu } from "@/components/auth/user-menu"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 export function Navbar() {
   const { status } = useSession()
@@ -32,7 +33,8 @@ export function Navbar() {
           </a>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
           {status === "authenticated" ? (
             <>
               <Button variant="ghost" size="sm" asChild>
