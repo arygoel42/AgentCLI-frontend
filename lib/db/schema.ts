@@ -7,6 +7,11 @@ export const providers = pgTable("providers", {
   avatarUrl: text("avatar_url"),
   apiKeyHash: text("api_key_hash"),
   apiKeyHint: text("api_key_hint"),
+  role: text("role"),
+  company: text("company"),
+  useCase: text("use_case"),
+  referralSource: text("referral_source"),
+  onboardingCompletedAt: timestamp("onboarding_completed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 })
 
