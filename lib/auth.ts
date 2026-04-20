@@ -21,7 +21,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ user }) {
       if (!user.email) return false
 
-      const supabase = await createClient()
+      const supabase = createClient()
       const { data: existing } = await supabase
         .from("providers")
         .select("id")
@@ -42,7 +42,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session }) {
       if (!session.user?.email) return session
 
-      const supabase = await createClient()
+      const supabase = createClient()
       const { data: provider } = await supabase
         .from("providers")
         .select("id")

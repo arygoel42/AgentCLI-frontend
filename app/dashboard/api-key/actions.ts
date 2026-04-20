@@ -7,7 +7,7 @@ import { generateApiKey, hashApiKey, getApiKeyHint } from "@/lib/crypto"
 async function getProviderBySession() {
   const session = await auth()
   if (!session?.user?.email) return null
-  const supabase = await createClient()
+  const supabase = createClient()
   const { data: provider } = await supabase
     .from("providers")
     .select()
@@ -24,7 +24,7 @@ export async function createApiKey(): Promise<{ key: string }> {
   if (provider.api_key_hash) throw new Error("Key already exists — use rotate instead")
 
   const key = generateApiKey()
-  const supabase = await createClient()
+  const supabase = createClient()
   await supabase
     .from("providers")
     .update({ api_key_hash: hashApiKey(key), api_key_hint: getApiKeyHint(key) })
@@ -39,7 +39,7 @@ export async function rotateApiKey(): Promise<{ key: string }> {
   if (!provider) throw new Error("Unauthorized")
 
   const key = generateApiKey()
-  const supabase = await createClient()
+  const supabase = createClient()
   await supabase
     .from("providers")
     .update({ api_key_hash: hashApiKey(key), api_key_hint: getApiKeyHint(key) })

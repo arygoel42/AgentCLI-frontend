@@ -7,7 +7,7 @@ export default async function ApiKeyPage() {
   const session = await auth()
   if (!session?.user?.email) redirect("/")
 
-  const supabase = await createClient()
+  const supabase = createClient()
   const { data: provider } = await supabase
     .from("providers")
     .select("api_key_hash, api_key_hint")
