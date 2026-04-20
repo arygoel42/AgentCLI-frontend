@@ -1,9 +1,8 @@
 import NextAuth from "next-auth"
 import Google from "next-auth/providers/google"
 import GitHub from "next-auth/providers/github"
-import { db } from "@/lib/db/client"
-import { providers } from "@/lib/db/schema"
-import { eq } from "drizzle-orm"
+import { createClient } from "@/utils/supabase/server"
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Google({
@@ -22,17 +21,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ user }) {
       if (!user.email) return false
 
-      const existing = await db
-        .select({ id: providers.id })
-        .from(providers)
-        .where(eq(providers.email, user.email))
+      const supabase = await createClient()
+      const { data: existing } = await supabase
+        .from("providers")
+        .select("id")
+        .eq("email", user.email)
         .limit(1)
 
-      if (existing.length === 0) {
-        await db.insert(providers).values({
+      if (!existing || existing.length === 0) {
+        await supabase.from("providers").insert({
           email: user.email,
           name: user.name ?? null,
-          avatarUrl: user.image ?? null,
+          avatar_url: user.image ?? null,
         })
       }
 
@@ -42,11 +42,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session }) {
       if (!session.user?.email) return session
 
-      const [provider] = await db
-        .select({ id: providers.id })
-        .from(providers)
-        .where(eq(providers.email, session.user.email))
+      const supabase = await createClient()
+      const { data: provider } = await supabase
+        .from("providers")
+        .select("id")
+        .eq("email", session.user.email)
         .limit(1)
+        .single()
 
       if (provider) {
         // @ts-expect-error — extending session type

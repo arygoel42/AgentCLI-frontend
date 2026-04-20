@@ -1,19 +1,19 @@
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
-import { db } from "@/lib/db/client"
-import { providers } from "@/lib/db/schema"
-import { eq } from "drizzle-orm"
+import { createClient } from "@/utils/supabase/server"
 import { CopyButton } from "@/components/dashboard/copy-button"
 
 export default async function SettingsPage() {
   const session = await auth()
   if (!session?.user?.email) redirect("/")
 
-  const [provider] = await db
+  const supabase = await createClient()
+  const { data: provider } = await supabase
+    .from("providers")
     .select()
-    .from(providers)
-    .where(eq(providers.email, session.user.email))
+    .eq("email", session.user.email)
     .limit(1)
+    .single()
 
   if (!provider) redirect("/")
 
@@ -37,7 +37,7 @@ export default async function SettingsPage() {
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Member since</span>
               <span>
-                {provider.createdAt.toLocaleDateString("en-US", {
+                {new Date(provider.created_at).toLocaleDateString("en-US", {
                   month: "long",
                   day: "numeric",
                   year: "numeric",

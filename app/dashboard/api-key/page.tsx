@@ -1,19 +1,19 @@
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
-import { db } from "@/lib/db/client"
-import { providers } from "@/lib/db/schema"
-import { eq } from "drizzle-orm"
+import { createClient } from "@/utils/supabase/server"
 import { ApiKeyManager } from "@/components/dashboard/api-key-manager"
 
 export default async function ApiKeyPage() {
   const session = await auth()
   if (!session?.user?.email) redirect("/")
 
-  const [provider] = await db
-    .select({ apiKeyHash: providers.apiKeyHash, apiKeyHint: providers.apiKeyHint })
-    .from(providers)
-    .where(eq(providers.email, session.user.email))
+  const supabase = await createClient()
+  const { data: provider } = await supabase
+    .from("providers")
+    .select("api_key_hash, api_key_hint")
+    .eq("email", session.user.email)
     .limit(1)
+    .single()
 
   if (!provider) redirect("/")
 
@@ -26,8 +26,8 @@ export default async function ApiKeyPage() {
 
       <div className="mt-8">
         <ApiKeyManager
-          hasKey={!!provider.apiKeyHash}
-          hint={provider.apiKeyHint}
+          hasKey={!!provider.api_key_hash}
+          hint={provider.api_key_hint}
         />
       </div>
     </div>
