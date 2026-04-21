@@ -21,10 +21,14 @@ export const clis = pgTable("clis", {
     .references(() => providers.id, { onDelete: "cascade" })
     .notNull(),
   name: text("name").notNull(),
-  modulePath: text("module_path").notNull(),
+  modulePath: text("module_path"),
   envPrefix: text("env_prefix").notNull(),
   telemetryToken: text("telemetry_token").unique().notNull(),
   currentVersion: text("current_version"),
+  specContent: text("spec_content"),
+  specFilename: text("spec_filename"),
+  configYml: text("config_yml"),
+  previewJson: text("preview_json"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 })
 

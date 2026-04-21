@@ -1,20 +1,10 @@
 "use client"
 
-import { useState } from "react"
-import { Upload, Terminal, Link2, ArrowRight } from "lucide-react"
+import { Terminal, ArrowRight, Upload } from "lucide-react"
 import { CopyButton } from "./copy-button"
+import { UploadSpecForm } from "./upload-spec-form"
 
 export function ProjectsEmptyState() {
-  const [specUrl, setSpecUrl] = useState("")
-  const [fileName, setFileName] = useState<string | null>(null)
-
-  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (file) setFileName(file.name)
-  }
-
-  const canCreate = specUrl.trim().length > 0 || fileName !== null
-
   return (
     <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr] md:gap-6 items-stretch">
       {/* Upload spec */}
@@ -30,44 +20,9 @@ export function ProjectsEmptyState() {
           Paste a URL or upload a file — we&apos;ll generate a CLI for it.
         </p>
 
-        <div className="mt-5 space-y-3">
-          <div className="relative">
-            <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              type="url"
-              value={specUrl}
-              onChange={(e) => setSpecUrl(e.target.value)}
-              placeholder="https://api.example.com/openapi.json"
-              className="w-full rounded-md border border-border bg-background pl-9 pr-3 py-2 text-sm outline-none focus:border-foreground/40"
-            />
-          </div>
-
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <div className="h-px flex-1 bg-border" />
-            <span>OR</span>
-            <div className="h-px flex-1 bg-border" />
-          </div>
-
-          <label className="flex items-center justify-center gap-2 w-full rounded-md border border-dashed border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:border-foreground/40 cursor-pointer transition-colors">
-            <Upload className="w-4 h-4" />
-            {fileName ?? "Upload a .json or .yaml file"}
-            <input
-              type="file"
-              accept=".json,.yaml,.yml"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-          </label>
+        <div className="mt-5 flex-1">
+          <UploadSpecForm />
         </div>
-
-        <button
-          disabled={!canCreate}
-          className="mt-5 flex items-center justify-center gap-2 w-full rounded-md py-2.5 text-sm font-medium transition-colors disabled:opacity-50"
-          style={{ backgroundColor: "var(--green)", color: "#000" }}
-        >
-          Create project
-          <ArrowRight className="w-4 h-4" />
-        </button>
       </div>
 
       {/* OR divider */}

@@ -21,19 +21,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ user }) {
       if (!user.email) return false
 
+      console.log("[auth] signIn callback fired for:", user.email)
       const supabase = createClient()
-      const { data: existing } = await supabase
+      const { data: existing, error: selectError } = await supabase
         .from("providers")
         .select("id")
         .eq("email", user.email)
         .limit(1)
 
+      if (selectError) console.error("[auth] signIn select error:", selectError)
+
       if (!existing || existing.length === 0) {
-        await supabase.from("providers").insert({
+        const { error: insertError } = await supabase.from("providers").insert({
           email: user.email,
           name: user.name ?? null,
           avatar_url: user.image ?? null,
         })
+        if (insertError) console.error("[auth] signIn insert error:", insertError)
       }
 
       return true
@@ -42,17 +46,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session }) {
       if (!session.user?.email) return session
 
-      const supabase = createClient()
-      const { data: provider } = await supabase
-        .from("providers")
-        .select("id")
-        .eq("email", session.user.email)
-        .limit(1)
-        .single()
+      try {
+        const supabase = createClient()
+        const { data: provider } = await supabase
+          .from("providers")
+          .select("id")
+          .eq("email", session.user.email)
+          .limit(1)
+          .single()
 
-      if (provider) {
-        // @ts-expect-error — extending session type
-        session.user.providerId = provider.id
+        if (provider) {
+          // @ts-expect-error — extending session type
+          session.user.providerId = provider.id
+        }
+      } catch (err) {
+        console.error("[auth] session Supabase error:", err)
       }
 
       return session
