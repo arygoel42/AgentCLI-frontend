@@ -271,12 +271,17 @@ export function Demo() {
   const showCommandCursor = phase === "typing" || phase === "pre-fill"
 
   return (
-    <section id="demo" className="px-6 py-24">
-      <div className="max-w-4xl mx-auto space-y-8">
-        <div className="text-center space-y-3">
-          <h2 className="text-2xl md:text-3xl font-medium tracking-tight">See it in action</h2>
-          <p className="text-muted-foreground">
-            Generate a production-ready CLI from any OpenAPI spec in seconds.
+    <section id="demo" className="px-6 pt-24 pb-12 border-t border-border/40">
+      <div className="max-w-4xl mx-auto space-y-10">
+        <div className="text-center space-y-4">
+          <p className="text-xs tracking-widest uppercase" style={{ color: "var(--green)" }}>
+            Try it live
+          </p>
+          <h2 className="text-3xl md:text-5xl font-medium tracking-tight">
+            Create an agent-native CLI<br className="hidden md:block" /> in minutes.
+          </h2>
+          <p className="text-muted-foreground max-w-xl mx-auto">
+            Click the terminal to take control — every command below is real.
           </p>
         </div>
 

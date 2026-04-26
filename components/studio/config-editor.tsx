@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition, useCallback } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { toast } from "sonner"
 import {
   Terminal, Globe, Lock, FolderTree, Sparkles,
@@ -440,7 +440,26 @@ export function ConfigEditor({ cliId, initialConfigYml, api }: ConfigEditorProps
   const [config, setConfig] = useState<CliConfig>(() => parseConfig(initialConfigYml))
   const [yamlStr, setYamlStr] = useState(initialConfigYml)
   const [activeSection, setActiveSection] = useState<Section>("cli")
-  const [isPending, startTransition] = useTransition()
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
+  const lastSavedRef = useRef(initialConfigYml)
+
+  // Autosave: debounce yml changes by 800ms, then write to DB.
+  useEffect(() => {
+    if (yamlStr === lastSavedRef.current) return
+    setSaveStatus("saving")
+    const timer = setTimeout(async () => {
+      try {
+        await saveConfig(cliId, yamlStr)
+        lastSavedRef.current = yamlStr
+        setSaveStatus("saved")
+      } catch (err) {
+        console.error("[autosave] failed:", err)
+        setSaveStatus("error")
+        toast.error(err instanceof Error ? err.message : "Autosave failed")
+      }
+    }, 800)
+    return () => clearTimeout(timer)
+  }, [yamlStr, cliId])
 
   const updateConfig = useCallback((newConfig: CliConfig) => {
     setConfig(newConfig)
@@ -451,17 +470,6 @@ export function ConfigEditor({ cliId, initialConfigYml, api }: ConfigEditorProps
     setYamlStr(newYml)
     const parsed = parseConfig(newYml)
     if (Object.keys(parsed).length > 0) setConfig(parsed)
-  }
-
-  function handleSave() {
-    startTransition(async () => {
-      try {
-        await saveConfig(cliId, yamlStr)
-        toast.success("Config saved")
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Save failed")
-      }
-    })
   }
 
   const yamlHighlightKey = activeSection !== "agent" ? (SECTION_YAML_KEY[activeSection] ?? null) : null
@@ -506,16 +514,25 @@ export function ConfigEditor({ cliId, initialConfigYml, api }: ConfigEditorProps
           </button>
         </div>
 
-        <div className="p-3 border-t border-border">
-          <button
-            onClick={handleSave}
-            disabled={isPending}
-            className="w-full flex items-center justify-center gap-1.5 text-xs px-3 py-1.5 rounded-md font-medium transition-colors disabled:opacity-50"
-            style={{ backgroundColor: "var(--green)", color: "#000" }}
-          >
-            <Save className="w-3 h-3" />
-            {isPending ? "Saving…" : "Save"}
-          </button>
+        <div className="p-3 border-t border-border flex items-center justify-center text-[11px] text-muted-foreground">
+          {saveStatus === "saving" && (
+            <span className="flex items-center gap-1.5">
+              <Save className="w-3 h-3 animate-pulse" />
+              Saving…
+            </span>
+          )}
+          {saveStatus === "saved" && (
+            <span className="flex items-center gap-1.5 text-green-500">
+              <Save className="w-3 h-3" />
+              Saved
+            </span>
+          )}
+          {saveStatus === "error" && (
+            <span className="text-red-500">Save failed</span>
+          )}
+          {saveStatus === "idle" && (
+            <span className="opacity-50">Changes save automatically</span>
+          )}
         </div>
       </div>
 

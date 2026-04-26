@@ -5,6 +5,8 @@ export const providers = pgTable("providers", {
   email: text("email").unique().notNull(),
   name: text("name"),
   avatarUrl: text("avatar_url"),
+  githubUsername: text("github_username"),
+  githubUserId: text("github_user_id"),
   apiKeyHash: text("api_key_hash"),
   apiKeyHint: text("api_key_hint"),
   role: text("role"),
@@ -29,6 +31,12 @@ export const clis = pgTable("clis", {
   specFilename: text("spec_filename"),
   configYml: text("config_yml"),
   previewJson: text("preview_json"),
+  repoUrl: text("repo_url"),
+  repoOwner: text("repo_owner"),
+  repoName: text("repo_name"),
+  lastCommitSha: text("last_commit_sha"),
+  inviteSentAt: timestamp("invite_sent_at", { withTimezone: true }),
+  inviteAcceptedAt: timestamp("invite_accepted_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 })
 

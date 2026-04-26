@@ -27,7 +27,9 @@ export default async function ProjectPage({
 
   const { data: cli } = await supabase
     .from("clis")
-    .select("id, name, provider_id, config_yml, spec_content, spec_filename, preview_json")
+    .select(
+      "id, name, provider_id, config_yml, spec_content, spec_filename, preview_json, repo_url, repo_owner, repo_name, invite_sent_at, invite_accepted_at"
+    )
     .eq("id", id)
     .single()
 
@@ -60,6 +62,11 @@ export default async function ProjectPage({
         config_yml: cli.config_yml ?? "",
         spec_content: cli.spec_content ?? "",
         spec_filename: cli.spec_filename ?? "openapi.yaml",
+        repo_url: cli.repo_url ?? null,
+        repo_owner: cli.repo_owner ?? null,
+        repo_name: cli.repo_name ?? null,
+        invite_sent_at: cli.invite_sent_at ?? null,
+        invite_accepted_at: cli.invite_accepted_at ?? null,
       }}
       previewData={previewData}
     />

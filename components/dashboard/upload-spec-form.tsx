@@ -12,12 +12,15 @@ type UploadSpecFormProps = {
 export function UploadSpecForm({ onSuccess }: UploadSpecFormProps) {
   const router = useRouter()
   const fileRef = useRef<HTMLInputElement>(null)
+  const [projectName, setProjectName] = useState("")
   const [specUrl, setSpecUrl] = useState("")
   const [fileName, setFileName] = useState<string | null>(null)
   const [isPending, setIsPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const canCreate = specUrl.trim().length > 0 || fileName !== null
+  const trimmedName = projectName.trim()
+  const nameValid = /^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(trimmedName) && trimmedName.length <= 100
+  const canCreate = nameValid && (specUrl.trim().length > 0 || fileName !== null)
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -30,6 +33,7 @@ export function UploadSpecForm({ onSuccess }: UploadSpecFormProps) {
     setError(null)
 
     const fd = new FormData()
+    fd.append("projectName", trimmedName)
     const file = fileRef.current?.files?.[0]
     if (file) {
       fd.append("specFile", file)
@@ -53,6 +57,23 @@ export function UploadSpecForm({ onSuccess }: UploadSpecFormProps) {
   return (
     <div className="flex flex-col">
       <div className="space-y-3">
+        <div>
+          <input
+            type="text"
+            value={projectName}
+            onChange={(e) => setProjectName(e.target.value)}
+            placeholder="Project name (e.g. ticketmaster-cli)"
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:border-foreground/40 disabled:opacity-50"
+            disabled={isPending}
+            maxLength={100}
+          />
+          {trimmedName.length > 0 && !nameValid && (
+            <p className="mt-1 text-xs text-red-500">
+              Letters, numbers, dots, dashes, underscores only. Max 100 chars.
+            </p>
+          )}
+        </div>
+
         <div className="relative">
           <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input

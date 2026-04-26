@@ -52,14 +52,14 @@ export function LoginDialog({ children }: { children: React.ReactNode }) {
           <DialogDescription>Choose a provider to continue</DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-3 pt-4">
-          <Button
+          {/* <Button
             variant="outline"
             className="w-full justify-center"
             onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
           >
             <GoogleIcon />
             Continue with Google
-          </Button>
+          </Button> */}
           <Button
             variant="outline"
             className="w-full justify-center"
