@@ -43,6 +43,14 @@ export function UploadSpecForm({ onSuccess }: UploadSpecFormProps) {
 
     try {
       const { id } = await createProject(fd)
+      // Fire-and-forget the slow provisioning. keepalive ensures the request
+      // survives the client-side navigation that happens right after.
+      fetch(`/api/projects/${id}/provision`, {
+        method: "POST",
+        keepalive: true,
+      }).catch(() => {
+        // If this fails the studio's status poller will eventually surface it.
+      })
       if (onSuccess) {
         onSuccess(id)
       } else {

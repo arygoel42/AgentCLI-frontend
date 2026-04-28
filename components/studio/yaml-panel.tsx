@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react"
 import { Edit2, Eye, Check } from "lucide-react"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { findSectionLines } from "@/lib/parse-yml"
 
 type YamlPanelProps = {
@@ -95,7 +94,7 @@ export function YamlPanel({ yml, highlightKey, onChange }: YamlPanelProps) {
 
       {/* View mode — per-line highlighted pre */}
       {!editMode && (
-        <ScrollArea className="flex-1">
+        <div className="flex-1 min-h-0 overflow-auto">
           <pre className="font-mono text-[11px] leading-5 py-3 select-text">
             {lines.map((line, i) => {
               const isHighlighted = start >= 0 && i >= start && i < end
@@ -119,7 +118,7 @@ export function YamlPanel({ yml, highlightKey, onChange }: YamlPanelProps) {
               )
             })}
           </pre>
-        </ScrollArea>
+        </div>
       )}
     </div>
   )

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Leaf, ArrowRight, ArrowLeft } from "lucide-react"
+import { Flower, ArrowRight, ArrowLeft } from "lucide-react"
 import { completeOnboarding } from "./actions"
 
 type Step = 0 | 1 | 2
@@ -62,7 +62,7 @@ export function OnboardingForm({ firstName }: { firstName: string | null }) {
     <div className="w-full max-w-lg">
       {/* Logo */}
       <div className="flex items-center justify-center gap-2 mb-10">
-        <Leaf className="w-5 h-5" style={{ color: "var(--green)" }} />
+        <Flower className="w-5 h-5" style={{ color: "var(--green)" }} />
         <span className="font-bold tracking-tight text-xl">
           pe<span style={{ color: "var(--green)" }}>t</span>l
         </span>

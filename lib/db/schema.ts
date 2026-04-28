@@ -37,6 +37,9 @@ export const clis = pgTable("clis", {
   lastCommitSha: text("last_commit_sha"),
   inviteSentAt: timestamp("invite_sent_at", { withTimezone: true }),
   inviteAcceptedAt: timestamp("invite_accepted_at", { withTimezone: true }),
+  provisioningStatus: text("provisioning_status").default("pending").notNull(),
+  provisioningError: text("provisioning_error"),
+  provisioningStartedAt: timestamp("provisioning_started_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 })
 

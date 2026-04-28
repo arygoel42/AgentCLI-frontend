@@ -1,7 +1,6 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { ArrowRight } from "lucide-react"
 import { LoginDialog } from "@/components/auth/login-dialog"
 
 export function Hero() {
@@ -19,11 +18,24 @@ export function Hero() {
           <LoginDialog>
             <Button
               size="lg"
-              className="gap-2 text-lg px-10 py-6 h-auto"
-              style={{ backgroundColor: "var(--green)", color: "#000", border: "none", cursor: "pointer"}}
+              className="font-mono gap-2 text-base md:text-lg px-6 py-5 h-auto rounded-md group"
+              style={{
+                backgroundColor: "transparent",
+                color: "var(--green)",
+                border: "1px solid var(--green)",
+                cursor: "pointer",
+                boxShadow: "0 0 0 0 rgba(16,185,129,0.0)",
+              }}
             >
-              Get Started
-              <ArrowRight className="w-5 h-5" />
+              <span style={{ color: "var(--green)" }}>$</span>
+              <span className="tracking-tight">petl init</span>
+              <span
+                className="inline-block w-[8px] h-[16px] align-middle"
+                style={{
+                  backgroundColor: "var(--green)",
+                  animation: "terminal-blink 1s step-end infinite",
+                }}
+              />
             </Button>
           </LoginDialog>
         </div>

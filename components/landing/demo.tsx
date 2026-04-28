@@ -281,7 +281,7 @@ export function Demo() {
             Create an agent-native CLI<br className="hidden md:block" /> in minutes.
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto">
-            Click the terminal to take control — every command below is real.
+            Click the terminal to take control
           </p>
         </div>
 

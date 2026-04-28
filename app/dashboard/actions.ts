@@ -2,18 +2,15 @@
 
 import { auth } from "@/lib/auth"
 import { createClient } from "@/utils/supabase/server"
-import { callBuild, callPreview } from "@/lib/engine"
+import { callPreview } from "@/lib/engine"
 import { generateYml } from "@/lib/generate-yml"
-import {
-  createStagingRepo,
-  inviteCollaborator,
-  pushInitialCommit,
-  repoExists,
-  validateRepoName,
-} from "@/lib/github"
+import { repoExists, validateRepoName } from "@/lib/github"
 import { randomUUID } from "crypto"
-import AdmZip from "adm-zip"
 
+// createProject does only the fast work: parse spec, generate default yml,
+// insert a clis row with provisioning_status='pending'. The slow GitHub work
+// (build → repo → invite) is fired separately by the client via
+// POST /api/projects/[id]/provision so the user lands in the studio quickly.
 export async function createProject(formData: FormData): Promise<{ id: string }> {
   const session = await auth()
   if (!session?.user?.email) throw new Error("Not authenticated")
@@ -52,7 +49,7 @@ export async function createProject(formData: FormData): Promise<{ id: string }>
     throw new Error("Please provide a spec file or URL")
   }
 
-  // Uniqueness check: DB + GitHub
+  // Fail fast on name collisions before anyone leaves the dashboard.
   const { data: nameTakenInDb } = await supabase
     .from("clis")
     .select("id")
@@ -65,64 +62,12 @@ export async function createProject(formData: FormData): Promise<{ id: string }>
     throw new Error(`A repo named "${projectName}" already exists in the org`)
   }
 
-  // Build IR + default yml
+  // Build IR + default yml. Fast (just parser + template-driven serialization).
   const previewData = await callPreview(specContent, specFilename)
   const configYml = generateYml(previewData.api)
 
   const envPrefix = projectName.replace(/[^a-zA-Z0-9]/g, "_").toUpperCase()
   const telemetryToken = randomUUID()
-
-  // Build the source zip via the engine
-  const buildRes = await callBuild(specContent, specFilename, configYml)
-  const zipBuffer = Buffer.from(await buildRes.arrayBuffer())
-
-  // Unzip and strip the top-level <cliName>/ directory the engine adds
-  const zip = new AdmZip(zipBuffer)
-  const files = new Map<string, Buffer>()
-  for (const entry of zip.getEntries()) {
-    if (entry.isDirectory) continue
-    const stripped = entry.entryName.replace(/^[^/]+\//, "")
-    if (!stripped) continue
-    files.set(stripped, entry.getData())
-  }
-  // Add the clicreator.yml so it lives in the repo alongside source
-  files.set("clicreator.yml", Buffer.from(configYml, "utf-8"))
-
-  // Provision the repo. If anything past this point fails, we still create the
-  // CLI row so the user has their spec/yml saved.
-  let repoUrl: string | null = null
-  let repoOwner: string | null = null
-  let repoName: string | null = null
-  let lastCommitSha: string | null = null
-  let inviteSentAt: string | null = null
-
-  try {
-    const repo = await createStagingRepo(
-      projectName,
-      `CLI generated from ${previewData.api.name || specFilename}`
-    )
-    repoOwner = repo.owner
-    repoName = repo.name
-    repoUrl = repo.url
-
-    const commitMsg = `init: generate CLI from ${previewData.api.name || specFilename}${
-      previewData.api.version ? ` v${previewData.api.version}` : ""
-    }`
-    lastCommitSha = await pushInitialCommit(
-      repo.owner,
-      repo.name,
-      files,
-      commitMsg,
-      repo.defaultBranch
-    )
-
-    if (provider.github_username) {
-      await inviteCollaborator(repo.owner, repo.name, provider.github_username)
-      inviteSentAt = new Date().toISOString()
-    }
-  } catch (err) {
-    console.error("[createProject] repo provisioning failed:", err)
-  }
 
   const { data: inserted, error } = await supabase
     .from("clis")
@@ -135,11 +80,7 @@ export async function createProject(formData: FormData): Promise<{ id: string }>
       spec_filename: specFilename,
       config_yml: configYml,
       preview_json: JSON.stringify(previewData),
-      repo_url: repoUrl,
-      repo_owner: repoOwner,
-      repo_name: repoName,
-      last_commit_sha: lastCommitSha,
-      invite_sent_at: inviteSentAt,
+      provisioning_status: "pending",
     })
     .select("id")
     .single()

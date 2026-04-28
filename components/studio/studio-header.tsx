@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Copy, Download, ExternalLink, Loader2, Trash2 } from "lucide-react"
+import { Download, Loader2, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import {
   AlertDialog,
@@ -16,10 +16,14 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { deleteProject } from "@/app/dashboard/projects/[id]/actions"
+import { ProvisioningPill } from "./provisioning-pill"
+
+type ProvisioningStatus = "pending" | "in_progress" | "completed" | "failed"
 
 type StudioHeaderProps = {
   cliName: string
   cliId: string
+  provisioningStatus: ProvisioningStatus
   repoUrl?: string | null
   repoOwner?: string | null
   repoName?: string | null
@@ -30,6 +34,7 @@ type StudioHeaderProps = {
 export function StudioHeader({
   cliName,
   cliId,
+  provisioningStatus,
   repoUrl,
   repoOwner,
   repoName,
@@ -39,18 +44,12 @@ export function StudioHeader({
   const router = useRouter()
   const [building, setBuilding] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [liveStatus, setLiveStatus] = useState<ProvisioningStatus>(provisioningStatus)
 
-  const cloneUrl =
-    repoOwner && repoName ? `git@github.com:${repoOwner}/${repoName}.git` : null
-  const invitePending = !!inviteSentAt && !inviteAcceptedAt
-
-  function copyClone() {
-    if (!cloneUrl) return
-    navigator.clipboard.writeText(cloneUrl)
-    toast.success("Clone URL copied")
-  }
+  const buildReady = liveStatus === "completed"
 
   async function handleBuild() {
+    if (!buildReady) return
     setBuilding(true)
     try {
       const res = await fetch(`/api/build/${cliId}`, { method: "POST" })
@@ -85,6 +84,14 @@ export function StudioHeader({
     }
   }
 
+  const buildLabel = !buildReady
+    ? liveStatus === "failed"
+      ? "Repo unavailable"
+      : "Waiting for repo…"
+    : building
+    ? "Building…"
+    : "Build"
+
   return (
     <div className="flex items-center justify-between border-b border-border px-6 py-3 shrink-0">
       <div className="flex flex-col">
@@ -93,39 +100,19 @@ export function StudioHeader({
       </div>
 
       <div className="flex items-center gap-2">
-        {repoUrl ? (
-          <div className="flex items-center gap-1.5 text-xs px-2 py-1.5 rounded-md border border-border">
-            <a
-              href={repoUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <span className="font-mono">{repoOwner}/{repoName}</span>
-              <ExternalLink className="w-3 h-3" />
-            </a>
-            {cloneUrl && (
-              <button
-                onClick={copyClone}
-                className="ml-1 text-muted-foreground hover:text-foreground transition-colors"
-                title="Copy clone URL"
-              >
-                <Copy className="w-3 h-3" />
-              </button>
-            )}
-            {invitePending && (
-              <span
-                className="ml-1 px-1.5 py-0.5 rounded text-[10px] font-medium"
-                style={{ backgroundColor: "var(--yellow, #facc15)", color: "#000" }}
-                title="Check your GitHub email to accept the collaborator invite"
-              >
-                Invite pending
-              </span>
-            )}
-          </div>
-        ) : (
-          <span className="text-xs text-muted-foreground italic">Repo not provisioned</span>
-        )}
+        <ProvisioningPill
+          cliId={cliId}
+          initialStatus={provisioningStatus}
+          initialRepoUrl={repoUrl ?? null}
+          initialRepoOwner={repoOwner ?? null}
+          initialRepoName={repoName ?? null}
+          initialInviteSentAt={inviteSentAt ?? null}
+          initialInviteAcceptedAt={inviteAcceptedAt ?? null}
+          onStatusChange={(s) => {
+            setLiveStatus(s)
+            if (s === "completed") router.refresh()
+          }}
+        />
 
         <AlertDialog>
           <AlertDialogTrigger asChild>
@@ -158,15 +145,17 @@ export function StudioHeader({
 
         <button
           onClick={handleBuild}
-          disabled={building}
-          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md font-medium transition-colors disabled:opacity-70"
+          disabled={building || !buildReady}
+          title={!buildReady ? "Repo provisioning must finish first" : undefined}
+          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           style={{ backgroundColor: "var(--green)", color: "#000" }}
         >
           {building ? (
-            <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Building…</>
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
           ) : (
-            <><Download className="w-3.5 h-3.5" /> Build</>
+            <Download className="w-3.5 h-3.5" />
           )}
+          {buildLabel}
         </button>
       </div>
     </div>

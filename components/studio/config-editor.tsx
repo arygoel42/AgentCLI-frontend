@@ -7,7 +7,6 @@ import {
   Save, Plus, Trash2, GripVertical, ChevronRight,
 } from "lucide-react"
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { YamlPanel } from "./yaml-panel"
 import { parseConfig, serializeConfig, type CliConfig, type ResourceNode } from "@/lib/parse-yml"
 import { saveConfig } from "@/app/dashboard/projects/[id]/actions"
@@ -544,14 +543,14 @@ export function ConfigEditor({ cliId, initialConfigYml, api }: ConfigEditorProps
       ) : (
         <ResizablePanelGroup direction="horizontal" className="flex-1 min-w-0">
           <ResizablePanel defaultSize={55} minSize={30}>
-            <ScrollArea className="h-full">
+            <div className="h-full overflow-y-auto">
               <div className="p-6 max-w-xl">
                 {activeSection === "cli"          && <CliSection config={config} onChange={updateConfig} />}
                 {activeSection === "environments" && <EnvironmentsSection config={config} onChange={updateConfig} />}
                 {activeSection === "security"     && <SecuritySection api={api} />}
                 {activeSection === "resources"    && <ResourcesSection config={config} onChange={updateConfig} />}
               </div>
-            </ScrollArea>
+            </div>
           </ResizablePanel>
           <ResizableHandle withHandle />
           <ResizablePanel defaultSize={45} minSize={25}>

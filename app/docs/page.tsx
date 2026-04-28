@@ -3,7 +3,7 @@ import { CodeBlock, CodeTabs } from "@/components/docs/code-block"
 import { InteractiveTerminal } from "@/components/docs/terminal"
 import { ApiExplorer } from "@/components/docs/api-explorer"
 import Link from "next/link"
-import { ArrowRight, Leaf } from "lucide-react"
+import { ArrowRight, Flower } from "lucide-react"
 
 // Terminal demo lines
 
@@ -107,7 +107,7 @@ export default function DocsPage() {
       <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur">
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-1.5">
-            <Leaf className="w-4 h-4" style={{ color: "var(--green)" }} />
+            <Flower className="w-4 h-4" style={{ color: "var(--green)" }} />
             <span className="font-bold tracking-tight text-lg">
               pe<span style={{ color: "var(--green)" }}>t</span>l
             </span>

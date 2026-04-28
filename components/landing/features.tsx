@@ -53,11 +53,11 @@ export function Features() {
   return (
     <section className="px-6 pb-24">
       <div className="max-w-6xl mx-auto space-y-10">
-        <div className="text-center space-y-2">
+        {/* <div className="text-center space-y-2">
           <p className="text-sm text-muted-foreground">
             Everything an agent needs, in the binary itself.
           </p>
-        </div>
+        </div> */}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {features.map((f) => (

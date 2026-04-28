@@ -11,6 +11,7 @@ type StudioShellProps = {
     config_yml: string
     spec_content: string
     spec_filename: string
+    provisioning_status: "pending" | "in_progress" | "completed" | "failed"
     repo_url?: string | null
     repo_owner?: string | null
     repo_name?: string | null
@@ -26,6 +27,7 @@ export function StudioShell({ cli, previewData }: StudioShellProps) {
       <StudioHeader
         cliName={cli.name}
         cliId={cli.id}
+        provisioningStatus={cli.provisioning_status}
         repoUrl={cli.repo_url}
         repoOwner={cli.repo_owner}
         repoName={cli.repo_name}
