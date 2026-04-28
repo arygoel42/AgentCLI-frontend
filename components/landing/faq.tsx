@@ -66,7 +66,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 
 export function Faq() {
   return (
-    <section className="px-6 py-24 border-t border-border/40">
+    <section id="faq" className="px-6 py-24 border-t border-border/40">
       <div className="max-w-3xl mx-auto space-y-10">
         <div className="space-y-3">
           <p className="text-xs tracking-widest uppercase" style={{ color: "var(--green)" }}>FAQ</p>

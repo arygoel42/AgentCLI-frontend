@@ -15,21 +15,21 @@ interface ScriptStep {
 
 const SCRIPT: ScriptStep[] = [
   {
-    command: "openapi-cli-gen generate --spec stripe.yaml --name stripe --env-prefix STRIPE",
+    command: "openapi-cli-gen generate --spec acme.yaml --name acme --env-prefix ACME",
     outputLines: [
-      { text: "  ✓  Parsing stripe.yaml...", className: "text-emerald-400" },
+      { text: "  ✓  Parsing acme.yaml...", className: "text-emerald-400" },
       { text: "  ✓  Found 847 operations across 120 paths", className: "text-emerald-400" },
       { text: "  ✓  Generating 112 command files...", className: "text-emerald-400" },
-      { text: "  ✓  go build ./cmd/stripe  ·  done", className: "text-emerald-400" },
+      { text: "  ✓  go build ./cmd/acme  ·  done", className: "text-emerald-400" },
       { text: "" },
-      { text: "  CLI written to ./stripe-cli/", className: "text-zinc-500" },
+      { text: "  CLI written to ./acme-cli/", className: "text-zinc-500" },
       { text: "  Quick start:", className: "text-zinc-500" },
-      { text: '    export STRIPE_API_KEY="sk_..."', className: "text-zinc-400" },
-      { text: "    ./stripe --schema", className: "text-zinc-400" },
+      { text: '    export ACME_API_KEY="sk_..."', className: "text-zinc-400" },
+      { text: "    ./acme --schema", className: "text-zinc-400" },
     ],
   },
   {
-    command: "./stripe --schema | jq '.commands[0]'",
+    command: "./acme --schema | jq '.commands[0]'",
     outputLines: [
       { text: "{", className: "text-amber-200" },
       { text: '  "group": "customers",', className: "text-zinc-300" },
@@ -38,11 +38,11 @@ const SCRIPT: ScriptStep[] = [
     ],
   },
   {
-    command: 'export STRIPE_API_KEY="sk_test_4eC39HqLyjWDomblZoUFe2C"',
+    command: 'export ACME_API_KEY="sk_test_4eC39HqLyjWDomblZoUFe2C"',
     outputLines: [],
   },
   {
-    command: "./stripe customers list -o compact --limit 3",
+    command: "./acme customers list -o compact --limit 3",
     outputLines: [
       {
         text: '{"id":"cus_Nk2M","email":"alice@acme.com","name":"Alice Rivera","created":"2026-03-15"}',
@@ -64,23 +64,23 @@ const SCRIPT: ScriptStep[] = [
 const RESPONSES: Record<string, OutputLine[]> = {
   help: [
     { text: "Available commands:", className: "text-zinc-400" },
-    { text: "  ./stripe --schema             Discover the full CLI interface", className: "text-zinc-300" },
-    { text: "  ./stripe customers list        List customers", className: "text-zinc-300" },
-    { text: "  ./stripe charges list          List charges", className: "text-zinc-300" },
-    { text: "  ./stripe --dry-run [cmd]       Preview a request without sending", className: "text-zinc-300" },
+    { text: "  ./acme --schema             Discover the full CLI interface", className: "text-zinc-300" },
+    { text: "  ./acme customers list        List customers", className: "text-zinc-300" },
+    { text: "  ./acme charges list          List charges", className: "text-zinc-300" },
+    { text: "  ./acme --dry-run [cmd]       Preview a request without sending", className: "text-zinc-300" },
     { text: "  clear                          Clear the terminal", className: "text-zinc-300" },
   ],
-  "./stripe --schema": [
+  "./acme --schema": [
     { text: "{", className: "text-amber-200" },
-    { text: '  "name": "stripe", "version": "0.1.0",', className: "text-zinc-300" },
-    { text: '  "auth_schemes": [{"type": "apiKey", "env_var": "STRIPE_API_KEY"}],', className: "text-zinc-300" },
+    { text: '  "name": "acme", "version": "0.1.0",', className: "text-zinc-300" },
+    { text: '  "auth_schemes": [{"type": "apiKey", "env_var": "ACME_API_KEY"}],', className: "text-zinc-300" },
     {
       text: '  "commands": [{"group":"customers","count":5},{"group":"charges","count":4},...]',
       className: "text-zinc-300",
     },
     { text: "}", className: "text-amber-200" },
   ],
-  "./stripe customers list": [
+  "./acme customers list": [
     {
       text: '{"id":"cus_Nk2M","email":"alice@acme.com","name":"Alice Rivera"}',
       className: "text-emerald-300",
@@ -91,7 +91,7 @@ const RESPONSES: Record<string, OutputLine[]> = {
     },
     { text: '{"_meta":{"total":142,"has_more":true}}', className: "text-zinc-500" },
   ],
-  "./stripe charges list": [
+  "./acme charges list": [
     {
       text: '{"id":"ch_1A2B","amount":2999,"currency":"usd","status":"succeeded","description":"Subscription"}',
       className: "text-emerald-300",
@@ -102,11 +102,11 @@ const RESPONSES: Record<string, OutputLine[]> = {
     },
     { text: '{"_meta":{"total":88,"has_more":true}}', className: "text-zinc-500" },
   ],
-  "./stripe --dry-run customers create --email test@example.com --name Test": [
+  "./acme --dry-run customers create --email test@example.com --name Test": [
     { text: "{", className: "text-amber-200" },
     { text: '  "dry_run": true,', className: "text-zinc-300" },
     { text: '  "method": "POST",', className: "text-zinc-300" },
-    { text: '  "url": "https://api.stripe.com/v1/customers",', className: "text-zinc-300" },
+    { text: '  "url": "https://api.acme.com/v1/customers",', className: "text-zinc-300" },
     {
       text: '  "headers": {"Authorization": "[REDACTED]", "Content-Type": "application/json"},',
       className: "text-zinc-300",

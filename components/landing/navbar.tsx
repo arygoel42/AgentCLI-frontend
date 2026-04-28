@@ -25,11 +25,11 @@ export function Navbar() {
           <a href="#demo" className="text-base text-muted-foreground hover:text-foreground transition-colors font-medium">
             Demo
           </a>
-          <a href="/docs" className="text-base text-muted-foreground hover:text-foreground transition-colors font-medium">
+          <Link href="/docs" className="text-base text-muted-foreground hover:text-foreground transition-colors font-medium">
             Docs
-          </a>
-          <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-base text-muted-foreground hover:text-foreground transition-colors font-medium">
-            GitHub
+          </Link>
+          <a href="#faq" className="text-base text-muted-foreground hover:text-foreground transition-colors font-medium">
+            FAQ
           </a>
         </div>
 
@@ -38,20 +38,15 @@ export function Navbar() {
           {status === "authenticated" ? (
             <>
               <Button variant="ghost" asChild className="text-base">
-                <a href="/dashboard">Dashboard</a>
+                <Link href="/dashboard">Dashboard</Link>
               </Button>
               <UserMenu />
             </>
           ) : (
             <>
               <LoginDialog>
-                <Button variant="ghost" className="text-base px-4">
-                  Sign in
-                </Button>
-              </LoginDialog>
-              <LoginDialog>
                 <Button className="text-base px-5 py-2 h-auto" style={{ backgroundColor: "var(--green)", color: "#000", border: "none" }}>
-                  Get started
+                  Sign in
                 </Button>
               </LoginDialog>
             </>
