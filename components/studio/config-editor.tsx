@@ -415,12 +415,12 @@ const NAV_ITEMS: { id: Section; label: string; Icon: React.ComponentType<{ class
 type ConfigEditorProps = {
   cliId: string
   initialConfigYml: string
-  initialSkills: Record<string, string>
-  defaultSkills: Record<string, string>
+  initialSkillNotes: string
+  defaultSkill: string
   api: PreviewApi
 }
 
-export function ConfigEditor({ cliId, initialConfigYml, initialSkills, defaultSkills, api }: ConfigEditorProps) {
+export function ConfigEditor({ cliId, initialConfigYml, initialSkillNotes, defaultSkill, api }: ConfigEditorProps) {
   const [config, setConfig] = useState<CliConfig>(() => parseConfig(initialConfigYml))
   const [yamlStr, setYamlStr] = useState(initialConfigYml)
   const [activeSection, setActiveSection] = useState<Section>("cli")
@@ -509,9 +509,8 @@ export function ConfigEditor({ cliId, initialConfigYml, initialSkills, defaultSk
       {activeSection === "skills" ? (
         <SkillsTab
           cliId={cliId}
-          api={api}
-          initialSkills={initialSkills}
-          defaultSkills={defaultSkills}
+          initialNotes={initialSkillNotes}
+          defaultSkill={defaultSkill}
         />
       ) : (
         <ResizablePanelGroup direction="horizontal" className="flex-1 min-w-0">

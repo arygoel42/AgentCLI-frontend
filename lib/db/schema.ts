@@ -1,4 +1,4 @@
-import { jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core"
+import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core"
 
 export const providers = pgTable("providers", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -40,12 +40,11 @@ export const clis = pgTable("clis", {
   provisioningStatus: text("provisioning_status").default("pending").notNull(),
   provisioningError: text("provisioning_error"),
   provisioningStartedAt: timestamp("provisioning_started_at", { withTimezone: true }),
-  // skills holds per-group markdown bodies edited in the studio. Shape: { [groupName]: string }.
-  // The "_global" key holds the cross-cutting skill. Empty/missing groups fall back to the
-  // generator's auto-derived defaults at packaging time. Auto-derived defaults are cached
-  // inside preview_json (preview.default_skills) so the studio can show them without
-  // re-rendering on the client.
-  skills: jsonb("skills").$type<Record<string, string>>().default({}).notNull(),
+  // skillNotes is user-authored markdown appended to the auto-rendered SKILL.md
+  // (and llms.txt) under a "## Notes" heading at build time. The auto content
+  // is regenerated from the spec on every rebuild — only this string is the
+  // user's contribution. Auto-derived skill body is cached in preview_json.default_skill.
+  skillNotes: text("skill_notes").default("").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 })
 

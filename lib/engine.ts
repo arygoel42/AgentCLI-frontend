@@ -63,10 +63,10 @@ export type PreviewApi = {
 export type PreviewResponse = {
   api: PreviewApi
   warnings: string[]
-  // default_skills is the engine's auto-derived skill markdown, keyed by skill
-  // name ("_global" plus one entry per command group). The studio renders these
-  // verbatim — no client-side templating — so the preview matches the binary.
-  default_skills: Record<string, string>
+  // default_skill is the engine's auto-derived SKILL.md / llms.txt body for
+  // this CLI. Single string (not per-group) — matches the skills.sh-style
+  // single-file convention. The studio shows it read-only above the notes editor.
+  default_skill: string
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -125,7 +125,7 @@ function normalizeResponse(raw: any): PreviewResponse {
       })),
     },
     warnings: raw.warnings ?? raw.Warnings ?? [],
-    default_skills: (raw.default_skills ?? {}) as Record<string, string>,
+    default_skill: typeof raw.default_skill === "string" ? raw.default_skill : "",
   }
 }
 
@@ -169,9 +169,9 @@ export async function callBuild(
   specFilename: string,
   configYml?: string,
   modulePath?: string,
-  // skills overrides keyed by skill name ("_global" or group name). Unset keys
-  // fall back to the engine's auto-derived defaults inside Generate().
-  skills?: Record<string, string>,
+  // notes is plain markdown appended to the auto-rendered SKILL.md / llms.txt
+  // under "## Notes" at build time. Empty string means no notes.
+  notes?: string,
 ): Promise<Response> {
   const form = new FormData()
   form.append("spec", new Blob([specContent], { type: "application/octet-stream" }), specFilename)
@@ -179,8 +179,8 @@ export async function callBuild(
     form.append("config", new Blob([configYml], { type: "text/plain" }), "clicreator.yml")
   }
   if (modulePath) form.append("module", modulePath)
-  if (skills && Object.keys(skills).length > 0) {
-    form.append("skills", JSON.stringify(skills))
+  if (notes && typeof notes=== "string" && notes.trim().length > 0) {
+    form.append("notes", notes)
   }
 
   const res = await fetch(`${engineUrl()}/build`, { method: "POST", body: form })

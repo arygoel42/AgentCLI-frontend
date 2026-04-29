@@ -11,7 +11,7 @@ type StudioShellProps = {
     config_yml: string
     spec_content: string
     spec_filename: string
-    skills: Record<string, string>
+    skill_notes: string
     provisioning_status: "pending" | "in_progress" | "completed" | "failed"
     repo_url?: string | null
     repo_owner?: string | null
@@ -39,8 +39,8 @@ export function StudioShell({ cli, previewData }: StudioShellProps) {
         <ConfigEditor
           cliId={cli.id}
           initialConfigYml={cli.config_yml}
-          initialSkills={cli.skills}
-          defaultSkills={previewData.default_skills}
+          initialSkillNotes={cli.skill_notes}
+          defaultSkill={previewData.default_skill}
           api={previewData.api}
         />
       </div>

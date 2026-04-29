@@ -28,7 +28,7 @@ export default async function ProjectPage({
   const { data: cli } = await supabase
     .from("clis")
     .select(
-      "id, name, provider_id, config_yml, spec_content, spec_filename, preview_json, skills, repo_url, repo_owner, repo_name, invite_sent_at, invite_accepted_at, provisioning_status"
+      "id, name, provider_id, config_yml, spec_content, spec_filename, preview_json, skill_notes, repo_url, repo_owner, repo_name, invite_sent_at, invite_accepted_at, provisioning_status"
     )
     .eq("id", id)
     .single()
@@ -44,9 +44,9 @@ export default async function ProjectPage({
     }
   }
 
-  // Backfill: previews stored before the engine started returning default_skills
-  // will lack them. Re-render once and persist so subsequent loads are cheap.
-  if (previewData && (!previewData.default_skills || Object.keys(previewData.default_skills).length === 0) && cli.spec_content) {
+  // Backfill: previews stored before the engine started returning default_skill
+  // will lack it. Re-render once and persist so subsequent loads are cheap.
+  if (previewData && !previewData.default_skill && cli.spec_content) {
     try {
       const refreshed = await callPreview(cli.spec_content, cli.spec_filename ?? "openapi.yaml", cli.config_yml ?? undefined)
       previewData = refreshed
@@ -78,7 +78,7 @@ export default async function ProjectPage({
         config_yml: cli.config_yml ?? "",
         spec_content: cli.spec_content ?? "",
         spec_filename: cli.spec_filename ?? "openapi.yaml",
-        skills: (cli.skills ?? {}) as Record<string, string>,
+        skill_notes: (cli.skill_notes ?? "") as string,
         provisioning_status: (cli.provisioning_status ?? "pending") as "pending" | "in_progress" | "completed" | "failed",
         repo_url: cli.repo_url ?? null,
         repo_owner: cli.repo_owner ?? null,
