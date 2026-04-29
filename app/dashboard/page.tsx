@@ -3,6 +3,7 @@ import { createClient } from "@/utils/supabase/server"
 import { redirect } from "next/navigation"
 import { ProjectsEmptyState } from "@/components/dashboard/projects-empty-state"
 import { ProjectsList } from "@/components/dashboard/projects-list"
+import { NewProjectButton } from "@/components/dashboard/new-project-button"
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -28,7 +29,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="p-8">
-      <div className="flex items-start justify-between">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Projects</h1>
           <p className="text-muted-foreground mt-1 text-sm">
@@ -37,6 +38,7 @@ export default async function DashboardPage() {
               : "Spin up your first CLI from an OpenAPI spec"}
           </p>
         </div>
+        {hasProjects && <NewProjectButton />}
       </div>
 
       <div className="mt-8">

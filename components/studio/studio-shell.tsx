@@ -24,7 +24,7 @@ type StudioShellProps = {
 
 export function StudioShell({ cli, previewData }: StudioShellProps) {
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-[calc(100vh-3.5rem)]">
       <StudioHeader
         cliName={cli.name}
         cliId={cli.id}
