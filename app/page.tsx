@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/landing/navbar"
 import { Hero } from "@/components/landing/hero"
+import { SocialProof } from "@/components/landing/social-proof"
 import { AgentsLoveClis } from "@/components/landing/agents-love-clis"
 import { Demo } from "@/components/landing/demo"
 import { Features } from "@/components/landing/features"
@@ -11,6 +12,7 @@ export default function Home() {
     <main className="min-h-screen bg-background relative">
       <Navbar />
       <Hero />
+      <SocialProof />
       <AgentsLoveClis />
       <Demo />
       <Features />
