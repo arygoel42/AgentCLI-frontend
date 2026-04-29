@@ -40,13 +40,13 @@ export function AgentsLoveClis() {
               style={{ transform: `translateX(-${current * 100}%)` }}
             >
               {tweets.map((t) => (
-                <div key={t.src} className="relative w-full shrink-0">
+                <div key={t.src} className="relative w-full shrink-0 aspect-[1204/314]">
                   <Image
                     src={t.src}
                     alt={t.alt}
-                    width={1200}
-                    height={800}
-                    className="w-full h-auto object-contain"
+                    fill
+                    sizes="(min-width: 768px) 672px, 100vw"
+                    className="object-contain"
                     priority={false}
                   />
                 </div>

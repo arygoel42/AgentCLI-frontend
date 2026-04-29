@@ -63,6 +63,10 @@ export type PreviewApi = {
 export type PreviewResponse = {
   api: PreviewApi
   warnings: string[]
+  // default_skills is the engine's auto-derived skill markdown, keyed by skill
+  // name ("_global" plus one entry per command group). The studio renders these
+  // verbatim — no client-side templating — so the preview matches the binary.
+  default_skills: Record<string, string>
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -121,6 +125,7 @@ function normalizeResponse(raw: any): PreviewResponse {
       })),
     },
     warnings: raw.warnings ?? raw.Warnings ?? [],
+    default_skills: (raw.default_skills ?? {}) as Record<string, string>,
   }
 }
 
@@ -163,7 +168,10 @@ export async function callBuild(
   specContent: string,
   specFilename: string,
   configYml?: string,
-  modulePath?: string
+  modulePath?: string,
+  // skills overrides keyed by skill name ("_global" or group name). Unset keys
+  // fall back to the engine's auto-derived defaults inside Generate().
+  skills?: Record<string, string>,
 ): Promise<Response> {
   const form = new FormData()
   form.append("spec", new Blob([specContent], { type: "application/octet-stream" }), specFilename)
@@ -171,6 +179,9 @@ export async function callBuild(
     form.append("config", new Blob([configYml], { type: "text/plain" }), "clicreator.yml")
   }
   if (modulePath) form.append("module", modulePath)
+  if (skills && Object.keys(skills).length > 0) {
+    form.append("skills", JSON.stringify(skills))
+  }
 
   const res = await fetch(`${engineUrl()}/build`, { method: "POST", body: form })
   await throwIfNotOk(res)

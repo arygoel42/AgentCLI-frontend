@@ -3,18 +3,19 @@
 import { useState, useCallback, useEffect, useRef } from "react"
 import { toast } from "sonner"
 import {
-  Terminal, Globe, Lock, FolderTree, Sparkles,
+  Terminal, Globe, Lock, FolderTree, BookOpen,
   Save, Plus, Trash2, GripVertical, ChevronRight,
 } from "lucide-react"
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
 import { YamlPanel } from "./yaml-panel"
+import { SkillsTab } from "./skills-tab"
 import { parseConfig, serializeConfig, type CliConfig, type ResourceNode } from "@/lib/parse-yml"
 import { saveConfig } from "@/app/dashboard/projects/[id]/actions"
 import type { PreviewApi } from "@/lib/engine"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Section = "cli" | "environments" | "security" | "resources" | "agent"
+type Section = "cli" | "environments" | "security" | "resources" | "skills"
 
 const SECTION_YAML_KEY: Record<string, string> = {
   cli: "cli",
@@ -401,25 +402,6 @@ function ResourcesSection({ config, onChange }: { config: CliConfig; onChange: (
   )
 }
 
-// ─── Agent features placeholder ───────────────────────────────────────────────
-
-function AgentFeaturesContent() {
-  return (
-    <div className="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground p-8">
-      <div
-        className="w-12 h-12 rounded-xl flex items-center justify-center"
-        style={{ backgroundColor: "var(--green-glow)" }}
-      >
-        <Sparkles className="w-6 h-6" style={{ color: "var(--green)" }} />
-      </div>
-      <p className="text-sm font-medium text-foreground">Agent features coming soon</p>
-      <p className="text-xs text-center max-w-xs">
-        MCP server generation, tool schemas, AI-native CLI patterns, and more.
-      </p>
-    </div>
-  )
-}
-
 // ─── Main ConfigEditor ────────────────────────────────────────────────────────
 
 const NAV_ITEMS: { id: Section; label: string; Icon: React.ComponentType<{ className?: string }> }[] = [
@@ -427,15 +409,18 @@ const NAV_ITEMS: { id: Section; label: string; Icon: React.ComponentType<{ class
   { id: "environments", label: "Environments",  Icon: Globe },
   { id: "security",     label: "Security",      Icon: Lock },
   { id: "resources",    label: "Resources",     Icon: FolderTree },
+  { id: "skills",       label: "Skills",        Icon: BookOpen },
 ]
 
 type ConfigEditorProps = {
   cliId: string
   initialConfigYml: string
+  initialSkills: Record<string, string>
+  defaultSkills: Record<string, string>
   api: PreviewApi
 }
 
-export function ConfigEditor({ cliId, initialConfigYml, api }: ConfigEditorProps) {
+export function ConfigEditor({ cliId, initialConfigYml, initialSkills, defaultSkills, api }: ConfigEditorProps) {
   const [config, setConfig] = useState<CliConfig>(() => parseConfig(initialConfigYml))
   const [yamlStr, setYamlStr] = useState(initialConfigYml)
   const [activeSection, setActiveSection] = useState<Section>("cli")
@@ -471,7 +456,7 @@ export function ConfigEditor({ cliId, initialConfigYml, api }: ConfigEditorProps
     if (Object.keys(parsed).length > 0) setConfig(parsed)
   }
 
-  const yamlHighlightKey = activeSection !== "agent" ? (SECTION_YAML_KEY[activeSection] ?? null) : null
+  const yamlHighlightKey = activeSection !== "skills" ? (SECTION_YAML_KEY[activeSection] ?? null) : null
 
   return (
     <div className="flex h-full overflow-hidden">
@@ -498,21 +483,6 @@ export function ConfigEditor({ cliId, initialConfigYml, api }: ConfigEditorProps
           })}
         </div>
 
-        <div className="border-t border-border py-2">
-          <button
-            onClick={() => setActiveSection("agent")}
-            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left transition-colors"
-            style={
-              activeSection === "agent"
-                ? { backgroundColor: "var(--green-glow)", borderLeft: "2px solid var(--green)", color: "var(--foreground)", fontWeight: 500 }
-                : { borderLeft: "2px solid transparent", color: "var(--muted-foreground)" }
-            }
-          >
-            <Sparkles className="w-3.5 h-3.5 shrink-0" />
-            Agent Features
-          </button>
-        </div>
-
         <div className="p-3 border-t border-border flex items-center justify-center text-[11px] text-muted-foreground">
           {saveStatus === "saving" && (
             <span className="flex items-center gap-1.5">
@@ -536,10 +506,13 @@ export function ConfigEditor({ cliId, initialConfigYml, api }: ConfigEditorProps
       </div>
 
       {/* Main content */}
-      {activeSection === "agent" ? (
-        <div className="flex-1">
-          <AgentFeaturesContent />
-        </div>
+      {activeSection === "skills" ? (
+        <SkillsTab
+          cliId={cliId}
+          api={api}
+          initialSkills={initialSkills}
+          defaultSkills={defaultSkills}
+        />
       ) : (
         <ResizablePanelGroup direction="horizontal" className="flex-1 min-w-0">
           <ResizablePanel defaultSize={55} minSize={30}>

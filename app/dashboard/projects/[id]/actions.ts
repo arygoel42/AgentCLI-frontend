@@ -44,3 +44,17 @@ export async function saveConfig(cliId: string, configYml: string): Promise<void
 
   if (error) throw new Error(error.message)
 }
+
+export async function saveSkills(
+  cliId: string,
+  skills: Record<string, string>,
+): Promise<void> {
+  const { supabase } = await getOwnedCli(cliId)
+
+  const { error } = await supabase
+    .from("clis")
+    .update({ skills })
+    .eq("id", cliId)
+
+  if (error) throw new Error(error.message)
+}

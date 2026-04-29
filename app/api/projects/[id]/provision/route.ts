@@ -29,7 +29,7 @@ export async function POST(
   const { data: cli } = await supabase
     .from("clis")
     .select(
-      "id, name, provider_id, spec_content, spec_filename, config_yml, module_path, provisioning_status"
+      "id, name, provider_id, spec_content, spec_filename, config_yml, module_path, skills, provisioning_status"
     )
     .eq("id", id)
     .single()
@@ -79,7 +79,8 @@ export async function POST(
       cli.spec_content,
       cli.spec_filename,
       cli.config_yml ?? undefined,
-      cli.module_path ?? undefined
+      cli.module_path ?? undefined,
+      (cli.skills ?? {}) as Record<string, string>,
     )
     const zipBuffer = Buffer.from(await engineRes.arrayBuffer())
 
