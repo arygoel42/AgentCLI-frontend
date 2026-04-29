@@ -10,7 +10,7 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'petl | Turn any API into an AI-native CLI',
+  title: 'petl - Build agent interfaces from your API',
   description: 'OpenAPI in, production-ready CLI out. Built for the agent era.',
   generator: 'v0.app',
   icons: {
