@@ -6,15 +6,15 @@ import { BookOpen, Save, Trash2 } from "lucide-react"
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
 import { saveSkillNotes } from "@/app/dashboard/projects/[id]/actions"
 
-type SkillsTabProps = {
+type AgentDocsTabProps = {
   cliId: string
   initialNotes: string
-  // defaultSkill is the engine-rendered SKILL.md / llms.txt body. Same Go
-  // template runs at build time, so the read-only preview matches the binary.
-  defaultSkill: string
+  // llmsText is the engine-rendered llms.txt body — same Go template runs at
+  // build time, so this read-only preview matches what gets embedded in the binary.
+  llmsText: string
 }
 
-export function SkillsTab({ cliId, initialNotes, defaultSkill }: SkillsTabProps) {
+export function AgentDocsTab({ cliId, initialNotes, llmsText }: AgentDocsTabProps) {
   const [notes, setNotes] = useState<string>(initialNotes)
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
   const lastSavedRef = useRef<string>(initialNotes)
@@ -40,19 +40,16 @@ export function SkillsTab({ cliId, initialNotes, defaultSkill }: SkillsTabProps)
 
   return (
     <div className="flex-1 min-w-0 flex flex-col">
-      {/* Header strip explaining the single skill model */}
+      {/* Header strip — auto-rendered llms.txt + user notes */}
       <div className="px-5 py-3 border-b border-border flex items-start justify-between gap-4">
         <div className="min-w-0">
           <h3 className="text-sm font-semibold flex items-center gap-2">
             <BookOpen className="w-3.5 h-3.5" />
-            Agent skill
+             llms.txt
           </h3>
-          {/* <p className="text-[11px] text-muted-foreground mt-0.5 max-w-2xl">
-            One <span className="font-mono">SKILL.md</span> ships with your CLI repo at{" "}
-            <span className="font-mono">skills/&lt;cli&gt;/SKILL.md</span> for skill-registry compatibility,
-            plus an embedded <span className="font-mono">llms.txt</span> in the binary. Both share the same
-            auto-generated body below — your notes get appended.
-          </p> */}
+          <p className="text-[10px] text-muted-foreground">
+              Auto-generated from your spec on every rebuild and ships with the CLI binary
+          </p>
         </div>
         <div className="text-[11px] text-muted-foreground shrink-0">
           {saveStatus === "saving" && (
@@ -76,17 +73,11 @@ export function SkillsTab({ cliId, initialNotes, defaultSkill }: SkillsTabProps)
       <ResizablePanelGroup direction="vertical" className="flex-1 min-h-0">
         <ResizablePanel defaultSize={62} minSize={20}>
           <div className="h-full flex flex-col bg-background">
-            <div className="px-5 py-2 border-b border-border">
-              <p className="text-xs font-mono">SKILL.md / llms.txt</p>
-              <p className="text-[10px] text-muted-foreground">
-                Auto-generated from your spec on every rebuild.
-              </p>
-            </div>
             <pre
               className="flex-1 overflow-auto font-mono text-xs px-5 py-3 leading-relaxed text-muted-foreground whitespace-pre-wrap"
               style={{ tabSize: 2 }}
             >
-              {defaultSkill || "(no preview available — try saving the project to refresh)"}
+              {llmsText || "(no preview available — try saving the project to refresh)"}
             </pre>
           </div>
         </ResizablePanel>

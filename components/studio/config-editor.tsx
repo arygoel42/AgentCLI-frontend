@@ -8,14 +8,14 @@ import {
 } from "lucide-react"
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
 import { YamlPanel } from "./yaml-panel"
-import { SkillsTab } from "./skills-tab"
+import { AgentDocsTab } from "./agent-docs-tab"
 import { parseConfig, serializeConfig, type CliConfig, type ResourceNode } from "@/lib/parse-yml"
 import { saveConfig } from "@/app/dashboard/projects/[id]/actions"
 import type { PreviewApi } from "@/lib/engine"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Section = "cli" | "environments" | "security" | "resources" | "skills"
+type Section = "cli" | "environments" | "security" | "resources" | "agent-docs"
 
 const SECTION_YAML_KEY: Record<string, string> = {
   cli: "cli",
@@ -409,18 +409,18 @@ const NAV_ITEMS: { id: Section; label: string; Icon: React.ComponentType<{ class
   { id: "environments", label: "Environments",  Icon: Globe },
   { id: "security",     label: "Security",      Icon: Lock },
   { id: "resources",    label: "Resources",     Icon: FolderTree },
-  { id: "skills",       label: "Skills",        Icon: BookOpen },
+  { id: "agent-docs",   label: "llms.txt",    Icon: BookOpen },
 ]
 
 type ConfigEditorProps = {
   cliId: string
   initialConfigYml: string
   initialSkillNotes: string
-  defaultSkill: string
+  llmsText: string
   api: PreviewApi
 }
 
-export function ConfigEditor({ cliId, initialConfigYml, initialSkillNotes, defaultSkill, api }: ConfigEditorProps) {
+export function ConfigEditor({ cliId, initialConfigYml, initialSkillNotes, llmsText, api }: ConfigEditorProps) {
   const [config, setConfig] = useState<CliConfig>(() => parseConfig(initialConfigYml))
   const [yamlStr, setYamlStr] = useState(initialConfigYml)
   const [activeSection, setActiveSection] = useState<Section>("cli")
@@ -456,7 +456,7 @@ export function ConfigEditor({ cliId, initialConfigYml, initialSkillNotes, defau
     if (Object.keys(parsed).length > 0) setConfig(parsed)
   }
 
-  const yamlHighlightKey = activeSection !== "skills" ? (SECTION_YAML_KEY[activeSection] ?? null) : null
+  const yamlHighlightKey = activeSection !== "agent-docs" ? (SECTION_YAML_KEY[activeSection] ?? null) : null
 
   return (
     <div className="flex h-full overflow-hidden">
@@ -506,11 +506,11 @@ export function ConfigEditor({ cliId, initialConfigYml, initialSkillNotes, defau
       </div>
 
       {/* Main content */}
-      {activeSection === "skills" ? (
-        <SkillsTab
+      {activeSection === "agent-docs" ? (
+        <AgentDocsTab
           cliId={cliId}
           initialNotes={initialSkillNotes}
-          defaultSkill={defaultSkill}
+          llmsText={llmsText}
         />
       ) : (
         <ResizablePanelGroup direction="horizontal" className="flex-1 min-w-0">

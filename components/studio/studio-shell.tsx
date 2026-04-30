@@ -40,7 +40,7 @@ export function StudioShell({ cli, previewData }: StudioShellProps) {
           cliId={cli.id}
           initialConfigYml={cli.config_yml}
           initialSkillNotes={cli.skill_notes}
-          defaultSkill={previewData.default_skill}
+          llmsText={previewData.llms_text}
           api={previewData.api}
         />
       </div>

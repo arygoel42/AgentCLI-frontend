@@ -63,10 +63,10 @@ export type PreviewApi = {
 export type PreviewResponse = {
   api: PreviewApi
   warnings: string[]
-  // default_skill is the engine's auto-derived SKILL.md / llms.txt body for
-  // this CLI. Single string (not per-group) — matches the skills.sh-style
-  // single-file convention. The studio shows it read-only above the notes editor.
-  default_skill: string
+  // llms_text is the engine-rendered llms.txt body (high-level CLI overview)
+  // that ships at the repo root and is embedded in the binary via
+  // agent-instructions. The studio shows it read-only above the notes editor.
+  llms_text: string
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -125,7 +125,7 @@ function normalizeResponse(raw: any): PreviewResponse {
       })),
     },
     warnings: raw.warnings ?? raw.Warnings ?? [],
-    default_skill: typeof raw.default_skill === "string" ? raw.default_skill : "",
+    llms_text: typeof raw.llms_text === "string" ? raw.llms_text : "",
   }
 }
 

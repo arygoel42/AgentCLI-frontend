@@ -44,9 +44,9 @@ export default async function ProjectPage({
     }
   }
 
-  // Backfill: previews stored before the engine started returning default_skill
+  // Backfill: previews stored before the engine started returning llms_text
   // will lack it. Re-render once and persist so subsequent loads are cheap.
-  if (previewData && !previewData.default_skill && cli.spec_content) {
+  if (previewData && !previewData.llms_text && cli.spec_content) {
     try {
       const refreshed = await callPreview(cli.spec_content, cli.spec_filename ?? "openapi.yaml", cli.config_yml ?? undefined)
       previewData = refreshed
