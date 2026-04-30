@@ -3,7 +3,6 @@ import { Hero } from "@/components/landing/hero"
 import { SocialProof } from "@/components/landing/social-proof"
 import { AgentsLoveClis } from "@/components/landing/agents-love-clis"
 import { Demo } from "@/components/landing/demo"
-import { Features } from "@/components/landing/features"
 import { Faq } from "@/components/landing/faq"
 import { FooterCta } from "@/components/landing/footer-cta"
 
@@ -15,7 +14,6 @@ export default function Home() {
       <SocialProof />
       <AgentsLoveClis />
       <Demo />
-      <Features />
       <Faq />
       <FooterCta />
     </main>
