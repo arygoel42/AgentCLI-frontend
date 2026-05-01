@@ -37,6 +37,19 @@ export default async function ReleasePage({
 
   if (!cli || cli.provider_id !== provider.id) notFound()
 
+  // If the release is stuck in_progress on page load, the request died (e.g. Vercel timeout).
+  // Reset it to failed so the user sees a retry option instead of a permanent spinner.
+  let releaseStatus = (cli.release_status ?? "idle") as "idle" | "in_progress" | "completed" | "failed"
+  let releaseError = cli.release_error ?? null
+  if (releaseStatus === "in_progress") {
+    releaseStatus = "failed"
+    releaseError = "Release timed out or was interrupted. Please try again."
+    await supabase
+      .from("clis")
+      .update({ release_status: "failed", release_error: releaseError })
+      .eq("id", cli.id)
+  }
+
   const parsed = parseConfig(cli.config_yml ?? "")
   const version = parsed.cli?.version ?? null
 
@@ -49,8 +62,8 @@ export default async function ReleasePage({
       latestReleaseUrl={cli.latest_release_url ?? null}
       latestReleaseAt={cli.latest_release_at ?? null}
       buildsSinceRelease={cli.builds_since_release ?? 0}
-      initialReleaseStatus={(cli.release_status ?? "idle") as "idle" | "in_progress" | "completed" | "failed"}
-      initialReleaseError={cli.release_error ?? null}
+      initialReleaseStatus={releaseStatus}
+      initialReleaseError={releaseError}
       provisioningStatus={cli.provisioning_status ?? "pending"}
       repoOwner={cli.repo_owner ?? null}
       repoName={cli.repo_name ?? null}
