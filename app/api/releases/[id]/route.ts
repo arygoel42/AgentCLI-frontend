@@ -31,7 +31,7 @@ export async function POST(
   const { data: cli } = await supabase
     .from("clis")
     .select(
-      "id, provider_id, name, spec_content, spec_filename, config_yml, module_path, skill_notes, repo_owner, repo_name, repo_url, provisioning_status, release_status, latest_release_version"
+      "id, provider_id, name, spec_content, spec_filename, config_yml, module_path, skill_notes, repo_owner, repo_name, repo_url, provisioning_status, release_status, latest_release_version, telemetry_token"
     )
     .eq("id", id)
     .single()
@@ -77,15 +77,13 @@ export async function POST(
 
   try {
     // 1. Cross-compile via engine
-    const engineRes = await callRelease(
-      cli.spec_content,
-      cli.spec_filename,
-      cliName,
-      version,
-      cli.config_yml ?? undefined,
-      cli.module_path ?? undefined,
-      (cli.skill_notes ?? "") as string,
-    )
+    const engineRes = await callRelease(cli.spec_content, cli.spec_filename, cliName, version, {
+      configYml: cli.config_yml ?? undefined,
+      modulePath: cli.module_path ?? undefined,
+      notes: (cli.skill_notes ?? "") as string,
+      feedbackToken: cli.telemetry_token ?? undefined,
+      feedbackEndpoint: process.env.FEEDBACK_ENDPOINT_URL || undefined,
+    })
     const zipBuffer = Buffer.from(await engineRes.arrayBuffer())
 
     // 2. Extract binaries

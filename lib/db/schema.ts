@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core"
+import { integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core"
 
 export const providers = pgTable("providers", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -59,6 +59,29 @@ export const clis = pgTable("clis", {
   latestReleaseUrl: text("latest_release_url"),
   latestReleaseAt: timestamp("latest_release_at", { withTimezone: true }),
   homebrewFormulaUrl: text("homebrew_formula_url"),
+  buildsSinceRelease: integer("builds_since_release").default(0).notNull(),
+  lastBuildAt: timestamp("last_build_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+})
+
+// feedbackEvents stores agent-submitted feedback about generated CLIs.
+// Written by the ingestion service (one row per `<cli> feedback ...` invocation),
+// read by the studio's per-CLI feedback table view. CLIs in the wild emit
+// forever, so the schema is additive-only and carries an explicit schemaVersion.
+export const feedbackEvents = pgTable("feedback_events", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  cliId: uuid("cli_id")
+    .references(() => clis.id, { onDelete: "cascade" })
+    .notNull(),
+  cliVersion: text("cli_version").notNull(),
+  schemaVersion: text("schema_version").notNull(),
+  // Free-text body submitted by the agent. Length-capped at ingest.
+  message: text("message").notNull(),
+  // Optional command the agent was running when it submitted (--about flag).
+  commandContext: text("command_context"),
+  // Detected agent runtime (claude_code, cursor, codex, ...). Empty when
+  // the CLI couldn't identify the caller.
+  agentType: text("agent_type"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 })
 
@@ -66,3 +89,5 @@ export type Provider = typeof providers.$inferSelect
 export type NewProvider = typeof providers.$inferInsert
 export type CLI = typeof clis.$inferSelect
 export type NewCLI = typeof clis.$inferInsert
+export type FeedbackEvent = typeof feedbackEvents.$inferSelect
+export type NewFeedbackEvent = typeof feedbackEvents.$inferInsert

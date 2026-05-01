@@ -29,7 +29,7 @@ export async function POST(
   const { data: cli } = await supabase
     .from("clis")
     .select(
-      "id, name, provider_id, spec_content, spec_filename, config_yml, module_path, skill_notes, provisioning_status"
+      "id, name, provider_id, spec_content, spec_filename, config_yml, module_path, skill_notes, provisioning_status, telemetry_token"
     )
     .eq("id", id)
     .single()
@@ -75,13 +75,13 @@ export async function POST(
   }
 
   try {
-    const engineRes = await callBuild(
-      cli.spec_content,
-      cli.spec_filename,
-      cli.config_yml ?? undefined,
-      cli.module_path ?? undefined,
-      (cli.skill_notes ?? "") as string,
-    )
+    const engineRes = await callBuild(cli.spec_content, cli.spec_filename, {
+      configYml: cli.config_yml ?? undefined,
+      modulePath: cli.module_path ?? undefined,
+      notes: (cli.skill_notes ?? "") as string,
+      feedbackToken: cli.telemetry_token ?? undefined,
+      feedbackEndpoint: process.env.FEEDBACK_ENDPOINT_URL || undefined,
+    })
     const zipBuffer = Buffer.from(await engineRes.arrayBuffer())
 
     const zip = new AdmZip(zipBuffer)

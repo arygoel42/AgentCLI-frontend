@@ -40,6 +40,7 @@ export function StudioShell({ cli, previewData }: StudioShellProps) {
       <div className="flex-1 overflow-hidden min-h-0">
         <ConfigEditor
           cliId={cli.id}
+          cliName={cli.name}
           initialConfigYml={cli.config_yml}
           initialSkillNotes={cli.skill_notes}
           llmsText={previewData.llms_text}

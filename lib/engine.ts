@@ -164,50 +164,70 @@ export async function callPreview(
   return normalizeResponse(await res.json())
 }
 
+export type ReleaseOptions = {
+  configYml?: string
+  modulePath?: string
+  notes?: string
+  feedbackToken?: string
+  feedbackEndpoint?: string
+}
+
 export async function callRelease(
   specContent: string,
   specFilename: string,
   cliName: string,
   version: string,
-  configYml?: string,
-  modulePath?: string,
-  notes?: string,
+  opts: ReleaseOptions = {},
 ): Promise<Response> {
   const form = new FormData()
   form.append("spec", new Blob([specContent], { type: "application/octet-stream" }), specFilename)
   form.append("cli_name", cliName)
   form.append("version", version)
-  if (configYml) {
-    form.append("config", new Blob([configYml], { type: "text/plain" }), "clicreator.yml")
+  if (opts.configYml) {
+    form.append("config", new Blob([opts.configYml], { type: "text/plain" }), "clicreator.yml")
   }
-  if (modulePath) form.append("module", modulePath)
-  if (notes && typeof notes === "string" && notes.trim().length > 0) {
-    form.append("notes", notes)
+  if (opts.modulePath) form.append("module", opts.modulePath)
+  if (opts.notes && opts.notes.trim().length > 0) {
+    form.append("notes", opts.notes)
   }
+  if (opts.feedbackToken) form.append("feedback_token", opts.feedbackToken)
+  if (opts.feedbackEndpoint) form.append("feedback_endpoint", opts.feedbackEndpoint)
 
   const res = await fetch(`${engineUrl()}/release`, { method: "POST", body: form })
   await throwIfNotOk(res)
   return res
 }
 
+export type BuildOptions = {
+  configYml?: string
+  modulePath?: string
+  // notes is plain markdown appended to the auto-rendered SKILL.md / llms.txt
+  // under "## Notes" at build time. Empty string means no notes.
+  notes?: string
+  // feedbackToken is the per-CLI identifier baked into the generated binary.
+  // When non-empty the engine emits a `feedback` command that POSTs to
+  // feedbackEndpoint (or the runtime default). Today this is the same value
+  // as the CLI's telemetry_token — one identifier per CLI.
+  feedbackToken?: string
+  feedbackEndpoint?: string
+}
+
 export async function callBuild(
   specContent: string,
   specFilename: string,
-  configYml?: string,
-  modulePath?: string,
-  // notes is plain markdown appended to the auto-rendered SKILL.md / llms.txt
-  // under "## Notes" at build time. Empty string means no notes.
-  notes?: string,
+  opts: BuildOptions = {},
 ): Promise<Response> {
   const form = new FormData()
   form.append("spec", new Blob([specContent], { type: "application/octet-stream" }), specFilename)
-  if (configYml) {
-    form.append("config", new Blob([configYml], { type: "text/plain" }), "clicreator.yml")
+  if (opts.configYml) {
+    form.append("config", new Blob([opts.configYml], { type: "text/plain" }), "clicreator.yml")
   }
-  if (modulePath) form.append("module", modulePath)
-  if (notes && typeof notes=== "string" && notes.trim().length > 0) {
-    form.append("notes", notes)
+  if (opts.modulePath) form.append("module", opts.modulePath)
+  if (opts.notes && opts.notes.trim().length > 0) {
+    form.append("notes", opts.notes)
   }
+  if (opts.feedbackToken) form.append("feedback_token", opts.feedbackToken)
+  if (opts.feedbackEndpoint) form.append("feedback_endpoint", opts.feedbackEndpoint)
 
   const res = await fetch(`${engineUrl()}/build`, { method: "POST", body: form })
   await throwIfNotOk(res)
