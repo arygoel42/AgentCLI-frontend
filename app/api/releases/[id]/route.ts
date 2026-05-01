@@ -1,3 +1,5 @@
+export const maxDuration = 60
+
 import { auth } from "@/lib/auth"
 import { createClient } from "@/utils/supabase/server"
 import { callRelease } from "@/lib/engine"
