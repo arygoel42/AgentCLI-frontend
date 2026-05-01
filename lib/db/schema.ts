@@ -45,6 +45,19 @@ export const clis = pgTable("clis", {
   // is regenerated from the spec on every rebuild — only this string is the
   // user's contribution. Auto-derived skill body is cached in preview_json.default_skill.
   skillNotes: text("skill_notes").default("").notNull(),
+  // Release columns — add to Supabase with:
+  // ALTER TABLE clis ADD COLUMN IF NOT EXISTS release_status TEXT DEFAULT 'idle';
+  // ALTER TABLE clis ADD COLUMN IF NOT EXISTS release_error TEXT;
+  // ALTER TABLE clis ADD COLUMN IF NOT EXISTS latest_release_version TEXT;
+  // ALTER TABLE clis ADD COLUMN IF NOT EXISTS latest_release_url TEXT;
+  // ALTER TABLE clis ADD COLUMN IF NOT EXISTS latest_release_at TIMESTAMPTZ;
+  // ALTER TABLE clis ADD COLUMN IF NOT EXISTS homebrew_formula_url TEXT;
+  releaseStatus: text("release_status").default("idle"),
+  releaseError: text("release_error"),
+  latestReleaseVersion: text("latest_release_version"),
+  latestReleaseUrl: text("latest_release_url"),
+  latestReleaseAt: timestamp("latest_release_at", { withTimezone: true }),
+  homebrewFormulaUrl: text("homebrew_formula_url"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 })
 

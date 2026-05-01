@@ -18,6 +18,7 @@ type StudioShellProps = {
     repo_name?: string | null
     invite_sent_at?: string | null
     invite_accepted_at?: string | null
+    latest_release_version?: string | null
   }
   previewData: PreviewResponse
 }
@@ -34,6 +35,7 @@ export function StudioShell({ cli, previewData }: StudioShellProps) {
         repoName={cli.repo_name}
         inviteSentAt={cli.invite_sent_at}
         inviteAcceptedAt={cli.invite_accepted_at}
+        latestReleaseVersion={cli.latest_release_version}
       />
       <div className="flex-1 overflow-hidden min-h-0">
         <ConfigEditor
