@@ -31,7 +31,7 @@ export async function POST(
   const { data: cli } = await supabase
     .from("clis")
     .select(
-      "id, name, provider_id, spec_content, spec_filename, config_yml, module_path, skill_notes, repo_owner, repo_name, last_commit_sha"
+      "id, name, provider_id, spec_content, spec_filename, config_yml, module_path, skill_notes, repo_owner, repo_name, last_commit_sha, builds_since_release"
     )
     .eq("id", id)
     .single()
@@ -83,7 +83,11 @@ export async function POST(
 
     await supabase
       .from("clis")
-      .update({ last_commit_sha: newSha })
+      .update({
+        last_commit_sha: newSha,
+        last_build_at: new Date().toISOString(),
+        builds_since_release: (cli.builds_since_release ?? 0) + 1,
+      })
       .eq("id", id)
 
     const commitUrl = `https://github.com/${cli.repo_owner}/${cli.repo_name}/commit/${newSha}`

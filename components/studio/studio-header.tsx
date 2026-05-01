@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Download, Loader2, Trash2 } from "lucide-react"
+import { Download, Loader2, Trash2, Rocket } from "lucide-react"
 import { toast } from "sonner"
 import {
   AlertDialog,
@@ -29,6 +29,7 @@ type StudioHeaderProps = {
   repoName?: string | null
   inviteSentAt?: string | null
   inviteAcceptedAt?: string | null
+  latestReleaseVersion?: string | null
 }
 
 export function StudioHeader({
@@ -40,6 +41,7 @@ export function StudioHeader({
   repoName,
   inviteSentAt,
   inviteAcceptedAt,
+  latestReleaseVersion,
 }: StudioHeaderProps) {
   const router = useRouter()
   const [building, setBuilding] = useState(false)
@@ -142,6 +144,19 @@ export function StudioHeader({
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        <button
+          onClick={() => router.push(`/dashboard/projects/${cliId}/release`)}
+          disabled={!buildReady}
+          title={!buildReady ? "Repo provisioning must finish first" : "Publish a versioned release"}
+          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <Rocket className="w-3.5 h-3.5" />
+          Release
+          {latestReleaseVersion && (
+            <span className="text-[10px] font-mono opacity-60">v{latestReleaseVersion}</span>
+          )}
+        </button>
 
         <button
           onClick={handleBuild}

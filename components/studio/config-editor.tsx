@@ -4,14 +4,14 @@ import { useState, useCallback, useEffect, useRef } from "react"
 import { toast } from "sonner"
 import {
   Terminal, Globe, Lock, FolderTree, BookOpen,
-  Save, Plus, Trash2, GripVertical, ChevronRight,
+  Save, Plus, Trash2, GripVertical, ChevronRight, X, Info,
 } from "lucide-react"
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
 import { YamlPanel } from "./yaml-panel"
 import { AgentDocsTab } from "./agent-docs-tab"
 import { parseConfig, serializeConfig, type CliConfig, type ResourceNode } from "@/lib/parse-yml"
 import { saveConfig } from "@/app/dashboard/projects/[id]/actions"
-import type { PreviewApi } from "@/lib/engine"
+import type { PreviewApi, Command as ApiCommand } from "@/lib/engine"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -178,13 +178,117 @@ function SecuritySection({ api }: { api: PreviewApi }) {
 
 type DragState = { cmdKey: string; fromGroup: string }
 
-function ResourcesSection({ config, onChange }: { config: CliConfig; onChange: (c: CliConfig) => void }) {
+function findApiCommand(api: PreviewApi, method: string, path: string): ApiCommand | undefined {
+  for (const group of api.groups ?? []) {
+    for (const cmd of group.commands ?? []) {
+      if (cmd.http_method.toUpperCase() === method.toUpperCase() && cmd.path === path) {
+        return cmd
+      }
+    }
+  }
+}
+
+function EndpointDetail({ cmd, cmdKey, method, path, onClose }: {
+  cmd: ApiCommand | undefined
+  cmdKey: string
+  method: string
+  path: string
+  onClose: () => void
+}) {
+  return (
+    <div className="p-3 space-y-3">
+      {/* Header row */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <MethodBadge method={method} />
+          <span className="text-xs font-semibold">{cmdKey}</span>
+          <code className="text-[10px] font-mono text-muted-foreground">{path}</code>
+        </div>
+        <button
+          onClick={onClose}
+          className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+          title="Close"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
+      {/* Description */}
+      {cmd?.description ? (
+        <p className="text-xs text-muted-foreground leading-relaxed">{cmd.description}</p>
+      ) : (
+        <p className="text-xs text-muted-foreground italic">No description available.</p>
+      )}
+
+      {/* Parameters */}
+      {(cmd?.parameters?.length ?? 0) > 0 && (
+        <div className="space-y-2">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Parameters</p>
+          <div className="space-y-2">
+            {cmd!.parameters.map((param) => (
+              <div key={param.name} className="space-y-0.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-bold">{param.name}</span>
+                  <code className="text-[10px] font-mono" style={{ color: "var(--green)" }}>
+                    param.Field[{param.type}{param.format ? `·${param.format}` : ""}]
+                  </code>
+                  <span
+                    className="text-[10px] px-1.5 py-0.5 rounded border border-border"
+                    style={param.required
+                      ? { color: "#f87171", borderColor: "rgba(239,68,68,0.3)", backgroundColor: "rgba(239,68,68,0.08)" }
+                      : undefined}
+                  >
+                    {param.required ? "Required" : "Optional"}
+                  </span>
+                  {param.location && (
+                    <span className="text-[10px] text-muted-foreground">in {param.location}</span>
+                  )}
+                </div>
+                {param.description && (
+                  <p className="text-[10px] text-muted-foreground pl-0.5">{param.description}</p>
+                )}
+                {param.enum && param.enum.length > 0 && (
+                  <p className="text-[10px] text-muted-foreground pl-0.5">
+                    Values: {param.enum.join(", ")}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Semantics */}
+      {cmd?.semantics && (
+        <div className="flex flex-wrap gap-1.5 pt-1 border-t border-border">
+          {cmd.semantics.safe && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400">safe</span>
+          )}
+          {cmd.semantics.idempotent && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-500/10 text-purple-400">idempotent</span>
+          )}
+          {cmd.semantics.reversible && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400">reversible</span>
+          )}
+          {cmd.semantics.impact && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+              impact: {cmd.semantics.impact}
+            </span>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ResourcesSection({ config, onChange, api }: { config: CliConfig; onChange: (c: CliConfig) => void; api: PreviewApi }) {
   const resources = config.resources ?? {}
   const [dragState, setDragState] = useState<DragState | null>(null)
   const [dragOverGroup, setDragOverGroup] = useState<string | null>(null)
   const [newGroupName, setNewGroupName] = useState("")
   const [renamingGroup, setRenamingGroup] = useState<string | null>(null)
   const [renamingCmd, setRenamingCmd] = useState<{ group: string; key: string } | null>(null)
+  const [expandedCmd, setExpandedCmd] = useState<{ group: string; key: string } | null>(null)
 
   function renameCommand(groupName: string, oldKey: string, newKey: string) {
     const safe = newKey.trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "")
@@ -257,6 +361,7 @@ function ResourcesSection({ config, onChange }: { config: CliConfig; onChange: (
       {groupEntries.map(([groupName, node]) => {
         const methods = Object.entries(node.methods ?? {})
         const isDragTarget = dragOverGroup === groupName && dragState?.fromGroup !== groupName
+        const expanded = expandedCmd?.group === groupName ? expandedCmd : null
         return (
           <div
             key={groupName}
@@ -264,6 +369,8 @@ function ResourcesSection({ config, onChange }: { config: CliConfig; onChange: (
             style={
               isDragTarget
                 ? { borderColor: "var(--green)", backgroundColor: "var(--green-glow)" }
+                : expanded
+                ? { borderColor: "var(--green)" }
                 : { borderColor: "var(--border)" }
             }
             onDragOver={(e) => { e.preventDefault(); setDragOverGroup(groupName) }}
@@ -297,7 +404,10 @@ function ResourcesSection({ config, onChange }: { config: CliConfig; onChange: (
                 >
                   {groupName}
                   <span className="ml-1.5 text-[10px] font-normal text-muted-foreground">
-                    {methods.length} command{methods.length !== 1 ? "s" : ""}
+                    {expanded
+                      ? <span style={{ color: "var(--green)" }}>viewing endpoint</span>
+                      : <>{methods.length} command{methods.length !== 1 ? "s" : ""}</>
+                    }
                   </span>
                 </button>
               )}
@@ -309,74 +419,95 @@ function ResourcesSection({ config, onChange }: { config: CliConfig; onChange: (
               </button>
             </div>
 
-            {/* Commands */}
-            <div className="p-2 space-y-1 min-h-[40px]">
-              {methods.length === 0 && (
-                <div className="text-[11px] text-muted-foreground text-center py-2 border border-dashed border-border rounded">
-                  Drop commands here
-                </div>
-              )}
-              {methods.map(([cmdKey, methodPath]) => {
-                const [method, path] = methodPath.split(" ")
-                const isDragging = dragState?.cmdKey === cmdKey && dragState?.fromGroup === groupName
-                return (
-                  <div
-                    key={cmdKey}
-                    draggable
-                    onDragStart={() => setDragState({ cmdKey, fromGroup: groupName })}
-                    onDragEnd={() => { setDragState(null); setDragOverGroup(null) }}
-                    className="flex items-center gap-2 px-2 py-1.5 rounded bg-background border border-border text-xs cursor-grab active:cursor-grabbing hover:border-foreground/20 transition-all group"
-                    style={isDragging ? { opacity: 0.4 } : undefined}
-                  >
-                    <GripVertical className="w-3 h-3 text-muted-foreground/40 shrink-0" />
-                    <MethodBadge method={method ?? "get"} />
-                    {renamingCmd?.group === groupName && renamingCmd?.key === cmdKey ? (
-                      <input
-                        autoFocus
-                        defaultValue={cmdKey}
-                        className="flex-1 text-xs font-medium bg-transparent outline-none border-b border-foreground/40 min-w-0"
-                        onBlur={(e) => renameCommand(groupName, cmdKey, e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") renameCommand(groupName, cmdKey, (e.target as HTMLInputElement).value)
-                          if (e.key === "Escape") setRenamingCmd(null)
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    ) : (
-                      <span
-                        className="flex-1 font-medium truncate cursor-text"
-                        title="Double-click to rename"
-                        onDoubleClick={(e) => { e.stopPropagation(); setRenamingCmd({ group: groupName, key: cmdKey }) }}
-                      >
-                        {cmdKey}
-                      </span>
-                    )}
-                    <code className="text-muted-foreground font-mono text-[10px] truncate max-w-[100px] hidden sm:block">
-                      {path}
-                    </code>
-                    <button
-                      onClick={() => removeCommand(groupName, cmdKey)}
-                      className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 transition-all ml-0.5 shrink-0"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
+            {/* Expanded endpoint detail — replaces command list */}
+            {expanded ? (() => {
+              const expandedMethodPath = node.methods?.[expanded.key] ?? ""
+              const [expandedMethod, expandedPath] = expandedMethodPath.split(" ")
+              const apiCmd = findApiCommand(api, expandedMethod ?? "", expandedPath ?? "")
+              return (
+                <EndpointDetail
+                  cmd={apiCmd}
+                  cmdKey={expanded.key}
+                  method={expandedMethod ?? "get"}
+                  path={expandedPath ?? ""}
+                  onClose={() => setExpandedCmd(null)}
+                />
+              )
+            })() : (
+              /* Commands list */
+              <div className="p-2 space-y-1 min-h-[40px]">
+                {methods.length === 0 && (
+                  <div className="text-[11px] text-muted-foreground text-center py-2 border border-dashed border-border rounded">
+                    Drop commands here
                   </div>
-                )
-              })}
-
-              {/* Subresources (read-only display) */}
-              {node.subresources && Object.keys(node.subresources).length > 0 && (
-                <div className="mt-1 pl-2 border-l-2 border-border space-y-1">
-                  {Object.entries(node.subresources).map(([subName, subNode]) => (
-                    <div key={subName} className="text-[11px] text-muted-foreground flex items-center gap-1">
-                      <ChevronRight className="w-3 h-3" />
-                      <span className="font-medium">{subName}</span>
-                      <span>— {Object.keys(subNode.methods ?? {}).length} cmd(s)</span>
+                )}
+                {methods.map(([cmdKey, methodPath]) => {
+                  const [method, path] = methodPath.split(" ")
+                  const isDragging = dragState?.cmdKey === cmdKey && dragState?.fromGroup === groupName
+                  return (
+                    <div
+                      key={cmdKey}
+                      draggable
+                      onDragStart={() => setDragState({ cmdKey, fromGroup: groupName })}
+                      onDragEnd={() => { setDragState(null); setDragOverGroup(null) }}
+                      onDoubleClick={() => setExpandedCmd({ group: groupName, key: cmdKey })}
+                      className="flex items-center gap-2 px-2 py-1.5 rounded bg-background border border-border text-xs cursor-grab active:cursor-grabbing hover:border-foreground/20 transition-all group"
+                      style={isDragging ? { opacity: 0.4 } : undefined}
+                      title="Double-click to view endpoint details"
+                    >
+                      <GripVertical className="w-3 h-3 text-muted-foreground/40 shrink-0" />
+                      <MethodBadge method={method ?? "get"} />
+                      {renamingCmd?.group === groupName && renamingCmd?.key === cmdKey ? (
+                        <input
+                          autoFocus
+                          defaultValue={cmdKey}
+                          className="flex-1 text-xs font-medium bg-transparent outline-none border-b border-foreground/40 min-w-0"
+                          onBlur={(e) => renameCommand(groupName, cmdKey, e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") renameCommand(groupName, cmdKey, (e.target as HTMLInputElement).value)
+                            if (e.key === "Escape") setRenamingCmd(null)
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      ) : (
+                        <span
+                          className="flex-1 font-medium truncate cursor-text"
+                          title="Double-click to rename"
+                          onDoubleClick={(e) => { e.stopPropagation(); setRenamingCmd({ group: groupName, key: cmdKey }) }}
+                        >
+                          {cmdKey}
+                        </span>
+                      )}
+                      <code className="text-muted-foreground font-mono text-[10px] truncate max-w-[100px] hidden sm:block">
+                        {path}
+                      </code>
+                      <Info
+                        className="w-3 h-3 text-muted-foreground/40 opacity-0 group-hover:opacity-100 shrink-0 transition-all"
+                      />
+                      <button
+                        onClick={(e) => { e.stopPropagation(); removeCommand(groupName, cmdKey) }}
+                        className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 transition-all ml-0.5 shrink-0"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                  )
+                })}
+
+                {/* Subresources (read-only display) */}
+                {node.subresources && Object.keys(node.subresources).length > 0 && (
+                  <div className="mt-1 pl-2 border-l-2 border-border space-y-1">
+                    {Object.entries(node.subresources).map(([subName, subNode]) => (
+                      <div key={subName} className="text-[11px] text-muted-foreground flex items-center gap-1">
+                        <ChevronRight className="w-3 h-3" />
+                        <span className="font-medium">{subName}</span>
+                        <span>— {Object.keys(subNode.methods ?? {}).length} cmd(s)</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )
       })}
@@ -520,7 +651,7 @@ export function ConfigEditor({ cliId, initialConfigYml, initialSkillNotes, llmsT
                 {activeSection === "cli"          && <CliSection config={config} onChange={updateConfig} />}
                 {activeSection === "environments" && <EnvironmentsSection config={config} onChange={updateConfig} />}
                 {activeSection === "security"     && <SecuritySection api={api} />}
-                {activeSection === "resources"    && <ResourcesSection config={config} onChange={updateConfig} />}
+                {activeSection === "resources"    && <ResourcesSection config={config} onChange={updateConfig} api={api} />}
               </div>
             </div>
           </ResizablePanel>

@@ -164,6 +164,32 @@ export async function callPreview(
   return normalizeResponse(await res.json())
 }
 
+export async function callRelease(
+  specContent: string,
+  specFilename: string,
+  cliName: string,
+  version: string,
+  configYml?: string,
+  modulePath?: string,
+  notes?: string,
+): Promise<Response> {
+  const form = new FormData()
+  form.append("spec", new Blob([specContent], { type: "application/octet-stream" }), specFilename)
+  form.append("cli_name", cliName)
+  form.append("version", version)
+  if (configYml) {
+    form.append("config", new Blob([configYml], { type: "text/plain" }), "clicreator.yml")
+  }
+  if (modulePath) form.append("module", modulePath)
+  if (notes && typeof notes === "string" && notes.trim().length > 0) {
+    form.append("notes", notes)
+  }
+
+  const res = await fetch(`${engineUrl()}/release`, { method: "POST", body: form })
+  await throwIfNotOk(res)
+  return res
+}
+
 export async function callBuild(
   specContent: string,
   specFilename: string,
