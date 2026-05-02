@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import {
   ArrowLeft, Github, ExternalLink, Copy, Check,
@@ -8,6 +8,15 @@ import {
 } from "lucide-react"
 
 type ReleaseStatus = "idle" | "in_progress" | "completed" | "failed"
+
+type ActionsJob = {
+  name: string
+  platform: string
+  status: string
+  conclusion: string | null
+  stepsTotal: number
+  stepsCompleted: number
+}
 
 type ReleaseShellProps = {
   cliId: string
@@ -22,6 +31,42 @@ type ReleaseShellProps = {
   provisioningStatus: string
   repoOwner: string | null
   repoName: string | null
+}
+
+const PLATFORMS = [
+  "darwin-arm64",
+  "darwin-amd64",
+  "linux-amd64",
+  "linux-arm64",
+  "windows-amd64",
+] as const
+
+const LOADING_WORDS = [
+  "moseying", "twinkling", "conducing", "percolating", "crystallizing",
+  "weaving", "harmonizing", "conjuring", "distilling", "forging",
+  "manifesting", "kindling", "fermenting", "composing", "resonating",
+  "orchestrating", "transmuting", "simmering", "coalescing", "dreaming",
+]
+
+function jobStatusLabel(status: string, conclusion: string | null): string {
+  if (status === "completed" && conclusion === "success") return "done"
+  if (status === "completed" && conclusion === "cancelled") return "cancelled"
+  if (status === "completed") return "failed"
+  if (status === "in_progress") return "building..."
+  return "queued"
+}
+
+function JobStatusIcon({ status, conclusion }: { status: string; conclusion: string | null }) {
+  if (status === "completed" && conclusion === "success") {
+    return <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-green-500" />
+  }
+  if (status === "completed") {
+    return <AlertCircle className="w-3.5 h-3.5 shrink-0 text-red-400" />
+  }
+  if (status === "in_progress") {
+    return <Loader2 className="w-3.5 h-3.5 shrink-0 animate-spin" style={{ color: "var(--green)" }} />
+  }
+  return <div className="w-3.5 h-3.5 shrink-0 rounded-full border border-border opacity-40" />
 }
 
 function CopyButton({ text }: { text: string }) {
@@ -124,9 +169,6 @@ function HistorySidebar({
   )
 }
 
-// The release page is always a "ready to release" form on load.
-// completed is a historical result — show it only when triggered in this session.
-// failed is preserved so the user sees the error on reload.
 function computeInitialStatus(dbStatus: ReleaseStatus): ReleaseStatus {
   if (dbStatus === "completed") return "idle"
   return dbStatus
@@ -148,13 +190,39 @@ export function ReleaseShell({
 }: ReleaseShellProps) {
   const router = useRouter()
 
-  const [status, setStatus]         = useState<ReleaseStatus>(
-    computeInitialStatus(initialReleaseStatus)
-  )
+  const [status, setStatus]         = useState<ReleaseStatus>(computeInitialStatus(initialReleaseStatus))
   const [error, setError]           = useState<string | null>(initialReleaseError)
   const [releaseUrl, setReleaseUrl] = useState<string | null>(initialReleaseUrl)
   const [releasedVersion, setReleasedVersion] = useState<string | null>(latestReleaseVersion)
   const [releasedAt, setReleasedAt] = useState<string | null>(latestReleaseAt)
+
+  // Actions polling state
+  const [actionsJobs, setActionsJobs]     = useState<ActionsJob[]>([])
+  const [actionsRunUrl, setActionsRunUrl] = useState<string | null>(null)
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // Cycling loading word
+  const [wordIdx, setWordIdx] = useState(0)
+  const wordIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const startWordCycle = useCallback(() => {
+    setWordIdx(Math.floor(Math.random() * LOADING_WORDS.length))
+    wordIntervalRef.current = setInterval(() => {
+      setWordIdx((i) => (i + 1) % LOADING_WORDS.length)
+    }, 2200)
+  }, [])
+
+  const stopWordCycle = useCallback(() => {
+    if (wordIntervalRef.current) { clearInterval(wordIntervalRef.current); wordIntervalRef.current = null }
+  }, [])
+
+  // Cleanup intervals on unmount
+  useEffect(() => {
+    return () => {
+      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
+      stopWordCycle()
+    }
+  }, [stopWordCycle])
 
   const canRelease      = provisioningStatus === "completed"
   const alreadyReleased = !!version && version === latestReleaseVersion
@@ -170,7 +238,6 @@ export function ReleaseShell({
       ? `curl -fsSL https://github.com/${repoOwner}/${repoName}/releases/latest/download/install.sh | sh`
       : null
 
-  // Build history entries from what we know (latest release only for now)
   const historyEntries =
     latestReleaseVersion
       ? [{ version: latestReleaseVersion, url: initialReleaseUrl, releasedAt: latestReleaseAt }]
@@ -179,20 +246,81 @@ export function ReleaseShell({
   async function handleRelease() {
     setStatus("in_progress")
     setError(null)
+    setActionsJobs([])
+    setActionsRunUrl(null)
+    startWordCycle()
+
     try {
       const res = await fetch(`/api/releases/${cliId}`, { method: "POST" })
       const data = await res.json()
+
       if (!res.ok) {
+        stopWordCycle()
         setStatus("failed")
         setError(data.error ?? "Release failed")
-      } else {
-        const now = new Date().toISOString()
-        setStatus("completed")
-        setReleaseUrl(data.releaseUrl)
-        setReleasedVersion(data.version)
-        setReleasedAt(now)
-        router.refresh()
+        return
       }
+
+      const { releaseUrl: url, repoOwner: owner, repoName: repo, version: ver } = data
+      const tag = `v${ver ?? version}`
+      setReleaseUrl(url)
+      setReleasedVersion(ver ?? version)
+
+      // Poll GitHub Actions every 3 seconds until the build completes
+      let currentRunId: number | null = null
+
+      async function pollActions() {
+        try {
+          const params = new URLSearchParams({ owner, repo })
+          if (currentRunId !== null) {
+            params.set("run_id", String(currentRunId))
+          } else {
+            params.set("tag", tag)
+          }
+
+          const r = await fetch(`/api/releases/status?${params}`)
+          if (!r.ok) return
+
+          const d = await r.json()
+
+          if (d.runId) currentRunId = d.runId
+          if (d.runUrl) setActionsRunUrl(d.runUrl)
+          if (Array.isArray(d.jobs) && d.jobs.length > 0) setActionsJobs(d.jobs)
+
+          if (d.runStatus === "completed") {
+            if (pollIntervalRef.current) {
+              clearInterval(pollIntervalRef.current)
+              pollIntervalRef.current = null
+            }
+            stopWordCycle()
+
+            // Notify the server so the DB reflects the final state
+            await fetch(`/api/releases/${cliId}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ conclusion: d.runConclusion, runUrl: d.runUrl }),
+            })
+
+            if (d.runConclusion === "success") {
+              setStatus("completed")
+              setReleasedAt(new Date().toISOString())
+              router.refresh()
+            } else {
+              setStatus("failed")
+              setError(
+                d.runUrl
+                  ? `GitHub Actions build failed. View logs: ${d.runUrl}`
+                  : "GitHub Actions build failed"
+              )
+            }
+          }
+        } catch (e) {
+          console.error("[release-shell] Actions poll error", e)
+        }
+      }
+
+      pollActions()
+      pollIntervalRef.current = setInterval(pollActions, 3000)
     } catch (err) {
       setStatus("failed")
       setError(err instanceof Error ? err.message : "Release failed")
@@ -221,18 +349,87 @@ export function ReleaseShell({
         <div className="flex-1 overflow-y-auto px-6 py-10">
           <div className="max-w-xl w-full mx-auto space-y-8">
 
-            {/* ── In progress ── */}
-            {status === "in_progress" && (
-              <div className="rounded-xl border border-border p-10 flex flex-col items-center gap-4 text-center">
-                <Loader2 className="w-8 h-8 animate-spin" style={{ color: "var(--green)" }} />
-                <div>
-                  <p className="text-sm font-semibold">Releasing {cliName}…</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Cross-compiling for all platforms and uploading to GitHub. This takes about 30–60 seconds.
-                  </p>
+            {/* ── In progress — single bar + cycling word ── */}
+            {status === "in_progress" && (() => {
+              const totalSteps     = actionsJobs.reduce((s, j) => s + j.stepsTotal, 0)
+              const completedSteps = actionsJobs.reduce((s, j) => s + j.stepsCompleted, 0)
+              const overallPct     = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0
+              const hasStarted     = actionsJobs.length > 0
+
+              return (
+                <div className="rounded-xl border border-border p-8 space-y-6">
+                  {/* Header */}
+                  <div className="flex items-start gap-3">
+                    <Loader2 className="w-5 h-5 shrink-0 mt-0.5 animate-spin" style={{ color: "var(--green)" }} />
+                    <div>
+                      <p className="text-sm font-semibold">
+                        Building {cliName} v{releasedVersion ?? version}…
+                      </p>
+                      <p className="text-xs mt-0.5" style={{ color: "var(--green)" }}>
+                        {LOADING_WORDS[wordIdx]}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Platform list — icons only, no per-row bars */}
+                  <div className="space-y-2 pl-1">
+                    {PLATFORMS.map((platform) => {
+                      const job           = actionsJobs.find((j) => j.platform === platform)
+                      const jobStatus     = job?.status ?? "queued"
+                      const jobConclusion = job?.conclusion ?? null
+                      return (
+                        <div key={platform} className="flex items-center gap-3 text-xs">
+                          <JobStatusIcon status={jobStatus} conclusion={jobConclusion} />
+                          <code className="font-mono text-[11px] w-28 shrink-0 text-foreground">
+                            {platform}
+                          </code>
+                          <span className="text-muted-foreground">
+                            {jobStatusLabel(jobStatus, jobConclusion)}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {/* Single overall progress bar */}
+                  <div className="space-y-1.5">
+                    <div className="h-1 w-full rounded-full bg-border overflow-hidden">
+                      {hasStarted ? (
+                        <div
+                          className="h-full rounded-full transition-all duration-700"
+                          style={{ width: `${overallPct}%`, backgroundColor: "var(--green)" }}
+                        />
+                      ) : (
+                        <div
+                          className="h-full rounded-full animate-pulse"
+                          style={{ width: "15%", backgroundColor: "var(--green)", opacity: 0.5 }}
+                        />
+                      )}
+                    </div>
+                    {hasStarted && (
+                      <p className="text-[10px] text-muted-foreground text-right">
+                        {completedSteps} / {totalSteps} steps
+                      </p>
+                    )}
+                  </div>
+
+                  {actionsRunUrl ? (
+                    <a
+                      href={actionsRunUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      View on GitHub Actions <ExternalLink className="w-3 h-3" />
+                    </a>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      Waiting for GitHub Actions to start…
+                    </p>
+                  )}
                 </div>
-              </div>
-            )}
+              )
+            })()}
 
             {/* ── Failed ── */}
             {status === "failed" && (
@@ -378,7 +575,7 @@ export function ReleaseShell({
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold">GitHub Releases + install script</p>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        Uploads 5 platform binaries and a <code className="font-mono">install.sh</code> one-liner as release assets.
+                        Pushes source to your repo, tags it, and GitHub Actions compiles 5 platform binaries and publishes the release.
                       </p>
                     </div>
                     <span className="text-[10px] px-1.5 py-0.5 rounded border border-border text-muted-foreground shrink-0">
