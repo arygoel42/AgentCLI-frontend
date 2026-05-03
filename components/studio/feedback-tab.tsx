@@ -39,7 +39,7 @@ export function FeedbackTab({ cliId, cliName }: { cliId: string; cliName: string
 
   return (
     <div className="flex-1 min-w-0 overflow-y-auto">
-      <div className="p-6 max-w-5xl">
+      <div className="p-6">
         <div className="mb-4 flex items-baseline justify-between">
           <div>
             <h3 className="text-sm font-semibold">Agent feedback</h3>

@@ -18,6 +18,49 @@ interface Feature {
 
 const FEATURES: Feature[] = [
   {
+    tag: "llms.txt",
+    title: "Built-in agent discoverability",
+    description:
+      "Every generated CLI ships with llms.txt and skills.md so agents can self-discover your entire API surface without reading docs or trial-and-erroring.",
+    command: "./acme --help",
+    output: [
+      { text: "acme  v0.2.1  ·  Acme Payments API", className: "text-zinc-200" },
+      { text: "" },
+      { text: "GROUPS", className: "text-zinc-500" },
+      { text: "  customers    create, list, retrieve, update, delete", className: "text-zinc-300" },
+      { text: "  charges      create, capture, refund, list", className: "text-zinc-300" },
+      { text: "  products     list, retrieve, create, archive", className: "text-zinc-300" },
+      { text: "  invoices     draft, finalize, pay, void, list", className: "text-zinc-300" },
+      { text: "  webhooks     create, list, delete, inspect", className: "text-zinc-300" },
+      { text: "" },
+      { text: "FLAGS", className: "text-zinc-500" },
+      { text: "  -o compact     JSONL output, ~60% fewer tokens", className: "text-zinc-400" },
+      { text: "  --jq <expr>    filter response inline", className: "text-zinc-400" },
+      { text: "  --dry-run      preview request, no side-effects", className: "text-zinc-400" },
+      { text: "  --scheme       machine-readable command + flag schema", className: "text-zinc-400" },
+      { text: "" },
+      { text: "Run 'acme <group> --help' for per-group commands.", className: "text-zinc-600" },
+    ],
+  },
+  {
+    tag: "feedback",
+    title: "Agents report gaps back to you",
+    description:
+      "A built-in feedback command lets agents flag missing operations, confusing flags, or broken auth right from the terminal. Routed to your dashboard so you know exactly what to ship next.",
+    command: './acme feedback "invoices list needs --status filter, can\'t tell draft from paid"',
+    output: [
+      { text: "  ✓  logged   fb_3Rx9", className: "text-emerald-400" },
+      { text: "" },
+      { text: "  snapshot:", className: "text-zinc-500" },
+      { text: '    version:       "0.2.1"', className: "text-zinc-400" },
+      { text: '    last_command:  "acme invoices list --limit 50"', className: "text-zinc-400" },
+      { text: '    agent:         "claude-code"', className: "text-zinc-400" },
+      { text: '    session:       "sess_8fKm2"', className: "text-zinc-400" },
+      { text: "" },
+      { text: "  → routed to acme dashboard", className: "text-zinc-500" },
+    ],
+  },
+  {
     tag: "-o compact",
     title: "Compact output, fewer tokens",
     description:
@@ -56,45 +99,6 @@ const FEATURES: Feature[] = [
       { text: '{"id":"cus_Rt4Z","email":"carol@acme.com"}', className: "text-emerald-300" },
     ],
   },
-  {
-    tag: "llms.txt",
-    title: "Built-in agent discoverability",
-    description:
-      "Every generated CLI ships with llms.txt and skills.md so agents can self-discover your entire API surface without reading docs or trial-and-erroring.",
-    command: "cat acme-cli/llms.txt",
-    output: [
-      { text: "# acme  ·  v0.1.0", className: "text-zinc-200" },
-      { text: "Agent-native CLI for the Acme API.", className: "text-zinc-400" },
-      { text: "" },
-      { text: "## Discovery", className: "text-zinc-200" },
-      { text: "  ./acme --schema           full command + flag inventory", className: "text-zinc-400" },
-      { text: "  ./acme <group> --help     per-group reference", className: "text-zinc-400" },
-      { text: "" },
-      { text: "## Auth", className: "text-zinc-200" },
-      { text: "  env: ACME_API_KEY  (required)", className: "text-zinc-400" },
-      { text: "" },
-      { text: "## Conventions", className: "text-zinc-200" },
-      { text: "  -o compact   JSONL, ~60% fewer tokens", className: "text-zinc-400" },
-      { text: "  --dry-run    preview the request, no side effects", className: "text-zinc-400" },
-    ],
-  },
-  {
-    tag: "feedback",
-    title: "Agents report gaps back to you",
-    description:
-      "A built-in feedback command lets agents flag missing operations, confusing flags, or broken auth right from the terminal. Routed to your dashboard so you know exactly what to ship next.",
-    command: './acme feedback "no way to filter charges by created_at range"',
-    output: [
-      { text: "  ✓  feedback logged   ref fb_8K2j", className: "text-emerald-400" },
-      { text: "" },
-      { text: "  context captured:", className: "text-zinc-500" },
-      { text: '    cli_version:   "0.1.0"', className: "text-zinc-400" },
-      { text: '    last_command:  "./acme charges list --limit 10"', className: "text-zinc-400" },
-      { text: '    agent:         "claude-code"', className: "text-zinc-400" },
-      { text: "" },
-      { text: "  routed to acme maintainers · view at acme.dev/feedback", className: "text-zinc-500" },
-    ],
-  },
 ]
 
 const TYPING_SPEED = 32
@@ -105,7 +109,9 @@ export function Demo() {
   const [activeIdx, setActiveIdx] = useState(0)
   const featureRefs = useRef<(HTMLDivElement | null)[]>([])
 
-  // Scroll-driven active feature on lg+
+  // Scroll-driven active feature on lg+.
+  // No dep array — intentionally reconnects after every render so hot-reload
+  // key changes never leave observers watching detached DOM nodes.
   useEffect(() => {
     if (typeof window === "undefined") return
     if (!window.matchMedia("(min-width: 1024px)").matches) return
@@ -123,7 +129,7 @@ export function Demo() {
       observers.push(obs)
     })
     return () => observers.forEach((o) => o.disconnect())
-  }, [])
+  })
 
   const scrollToFeature = (i: number) => {
     setActiveIdx(i)

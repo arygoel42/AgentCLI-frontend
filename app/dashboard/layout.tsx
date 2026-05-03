@@ -10,7 +10,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const supabase = createClient()
   const { data: provider } = await supabase
     .from("providers")
-    .select("name, email, created_at, onboarding_completed_at")
+    .select("name, email, created_at, onboarding_completed_at, avatar_url")
     .eq("email", session.user.email)
     .limit(1)
     .single()
@@ -19,7 +19,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <div className="bg-background">
-      <TopBar provider={{ name: provider.name, email: provider.email, created_at: provider.created_at }} />
+      <TopBar provider={{ name: provider.name, email: provider.email, created_at: provider.created_at, avatarUrl: provider.avatar_url ?? null }} />
       <main>
         {children}
       </main>

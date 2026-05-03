@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 const faqs = [
   {
     q: "How is this different from an MCP?",
-    a: "MCPs expose tools over a JSON-RPC protocol and typically run as a sidecar process. petl generates a standalone binary — no server, no protocol overhead. Agents invoke it like any shell command and get structured JSON back. It composes with pipes, works in CI, and doesn't inflate your token budget.",
+    a: "MCPs use an agent loop — one tool call, one round-trip. A CLI lets your agent write a shell script: chain commands with pipes, fan out with xargs, filter with jq, all in one shot. It's a real binary your agent uses at the terminal, the same way a developer would.",
   },
   {
     q: "Do I need to write any code?",
@@ -18,11 +18,11 @@ const faqs = [
   },
   {
     q: "How do agents discover what commands exist?",
-    a: "Run ./mycli --schema and the CLI emits a machine-readable JSON document describing every command group, flag, auth scheme, and output format. Agents read this once, cache it, and never need to trial-and-error. There's also --usage per-command for inline introspection.",
+    a: "Run mycli --help for a full list of groups and subcommands. For machine-readable introspection, mycli --scheme emits a JSON document covering every command, flag, and expected output — no trial and error.",
   },
   {
     q: "Can I customize the generated CLI?",
-    a: "The generator is template-based and deterministic — same spec in, same code out. You can fork the generated project and edit it freely. For common customizations (renaming commands, hiding operations) we're building x-cli extensions into the spec directly so customizations survive regeneration.",
+    a: "Customizations live in clicreator.yml — rename commands, hide operations, set an env-var prefix. When your API changes, update the spec, bump the version, and petl publishes a new GitHub release. Your users get the update with a single command.",
   },
   {
     q: "What authentication schemes are supported?",

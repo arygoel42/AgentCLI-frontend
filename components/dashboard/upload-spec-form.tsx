@@ -118,7 +118,7 @@ export function UploadSpecForm({ onSuccess }: UploadSpecFormProps) {
         onClick={handleCreate}
         disabled={!canCreate || isPending}
         className="mt-5 flex items-center justify-center gap-2 w-full rounded-md py-2.5 text-sm font-medium transition-colors disabled:opacity-50"
-        style={{ backgroundColor: "var(--green)", color: "#000" }}
+        style={{ backgroundColor: "var(--green)", color: "#fff" }}
       >
         {isPending ? (
           <>

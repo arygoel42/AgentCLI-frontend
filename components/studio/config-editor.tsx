@@ -259,25 +259,6 @@ function EndpointDetail({ cmd, cmdKey, method, path, onClose }: {
         </div>
       )}
 
-      {/* Semantics */}
-      {cmd?.semantics && (
-        <div className="flex flex-wrap gap-1.5 pt-1 border-t border-border">
-          {cmd.semantics.safe && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400">safe</span>
-          )}
-          {cmd.semantics.idempotent && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-500/10 text-purple-400">idempotent</span>
-          )}
-          {cmd.semantics.reversible && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400">reversible</span>
-          )}
-          {cmd.semantics.impact && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
-              impact: {cmd.semantics.impact}
-            </span>
-          )}
-        </div>
-      )}
     </div>
   )
 }

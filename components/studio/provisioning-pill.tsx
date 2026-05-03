@@ -49,7 +49,9 @@ export function ProvisioningPill({
   const [retrying, setRetrying] = useState(false)
 
   useEffect(() => {
-    if (data.status === "completed" || data.status === "failed") return
+    const invitePending = !!data.inviteSentAt && !data.inviteAcceptedAt
+    if (data.status === "failed") return
+    if (data.status === "completed" && !invitePending) return
 
     let cancelled = false
     const interval = setInterval(async () => {
@@ -60,19 +62,19 @@ export function ProvisioningPill({
         if (cancelled) return
         setData(next)
         onStatusChange?.(next.status)
-        if (next.status === "completed" || next.status === "failed") {
-          clearInterval(interval)
-        }
+        const nextInvitePending = !!next.inviteSentAt && !next.inviteAcceptedAt
+        if (next.status === "failed") clearInterval(interval)
+        if (next.status === "completed" && !nextInvitePending) clearInterval(interval)
       } catch {
         // network blip — keep polling
       }
-    }, 2000)
+    }, 3000)
 
     return () => {
       cancelled = true
       clearInterval(interval)
     }
-  }, [cliId, data.status, onStatusChange])
+  }, [cliId, data.status, data.inviteSentAt, data.inviteAcceptedAt, onStatusChange])
 
   async function handleRetry() {
     setRetrying(true)
@@ -151,8 +153,7 @@ export function ProvisioningPill({
       </button>
       {invitePending && (
         <span
-          className="ml-1 px-1.5 py-0.5 rounded text-[10px] font-medium"
-          style={{ backgroundColor: "var(--yellow, #facc15)", color: "#000" }}
+          className="ml-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-500/15 text-blue-400"
           title="Check your GitHub email to accept the collaborator invite"
         >
           Invite pending

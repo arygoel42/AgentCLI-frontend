@@ -25,9 +25,11 @@ type ProviderInfo = {
   name: string | null
   email: string
   created_at: string
+  avatarUrl: string | null
 }
 
 export function TopBar({ provider }: { provider: ProviderInfo }) {
+  const { avatarUrl } = provider
   const { resolvedTheme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
@@ -51,10 +53,15 @@ export function TopBar({ provider }: { provider: ProviderInfo }) {
           <DropdownMenuTrigger asChild>
             <button
               aria-label="Account menu"
-              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium transition-colors hover:opacity-80"
+              className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center text-xs font-medium transition-opacity hover:opacity-80"
               style={{ backgroundColor: "var(--green-glow)", color: "var(--green)" }}
             >
-              {initial}
+              {avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={avatarUrl} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              ) : (
+                initial
+              )}
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">

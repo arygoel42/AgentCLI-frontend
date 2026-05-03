@@ -13,7 +13,7 @@ export function Navbar() {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/90 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-8 h-18 flex items-center justify-between" style={{ height: '72px' }}>
+      <div className="max-w-7xl mx-auto px-8 flex items-center justify-between relative" style={{ height: '72px' }}>
         <Link href="/" className="flex items-center gap-2.5">
           <Flower className="w-6 h-6" style={{ color: "var(--green)" }} />
           <span className="font-bold tracking-tight text-2xl">
@@ -21,13 +21,13 @@ export function Navbar() {
           </span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-10">
+        <div className="hidden md:flex items-center gap-10 absolute left-1/2 -translate-x-1/2">
           <a href="#demo" className="text-base text-muted-foreground hover:text-foreground transition-colors font-medium">
             Demo
           </a>
-          <Link href="/docs" className="text-base text-muted-foreground hover:text-foreground transition-colors font-medium">
-            Docs
-          </Link>
+          <a href="#how-it-works" className="text-base text-muted-foreground hover:text-foreground transition-colors font-medium">
+            How it works
+          </a>
           <a href="#faq" className="text-base text-muted-foreground hover:text-foreground transition-colors font-medium">
             FAQ
           </a>

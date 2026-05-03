@@ -351,10 +351,11 @@ export function ReleaseShell({
 
             {/* ── In progress — single bar + cycling word ── */}
             {status === "in_progress" && (() => {
-              const totalSteps     = actionsJobs.reduce((s, j) => s + j.stepsTotal, 0)
-              const completedSteps = actionsJobs.reduce((s, j) => s + j.stepsCompleted, 0)
-              const overallPct     = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0
-              const hasStarted     = actionsJobs.length > 0
+              const completedSteps  = actionsJobs.reduce((s, j) => s + j.stepsCompleted, 0)
+              const stepsPerJob     = Math.max(...actionsJobs.map((j) => j.stepsTotal), 0)
+              const fixedTotal      = stepsPerJob * PLATFORMS.length
+              const overallPct      = fixedTotal > 0 ? Math.round((completedSteps / fixedTotal) * 100) : 0
+              const hasStarted      = actionsJobs.length > 0
 
               return (
                 <div className="rounded-xl border border-border p-8 space-y-6">
@@ -392,41 +393,41 @@ export function ReleaseShell({
                   </div>
 
                   {/* Single overall progress bar */}
-                  <div className="space-y-1.5">
-                    <div className="h-1 w-full rounded-full bg-border overflow-hidden">
-                      {hasStarted ? (
-                        <div
-                          className="h-full rounded-full transition-all duration-700"
-                          style={{ width: `${overallPct}%`, backgroundColor: "var(--green)" }}
-                        />
-                      ) : (
-                        <div
-                          className="h-full rounded-full animate-pulse"
-                          style={{ width: "15%", backgroundColor: "var(--green)", opacity: 0.5 }}
-                        />
-                      )}
-                    </div>
-                    {hasStarted && (
-                      <p className="text-[10px] text-muted-foreground text-right">
-                        {completedSteps} / {totalSteps} steps
-                      </p>
+                  <div className="h-1 w-full rounded-full bg-border overflow-hidden">
+                    {hasStarted ? (
+                      <div
+                        className="h-full rounded-full transition-all duration-700"
+                        style={{ width: `${overallPct}%`, backgroundColor: "var(--green)" }}
+                      />
+                    ) : (
+                      <div
+                        className="h-full rounded-full animate-pulse"
+                        style={{ width: "15%", backgroundColor: "var(--green)", opacity: 0.5 }}
+                      />
                     )}
                   </div>
 
-                  {actionsRunUrl ? (
-                    <a
-                      href={actionsRunUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      View on GitHub Actions <ExternalLink className="w-3 h-3" />
-                    </a>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">
-                      Waiting for GitHub Actions to start…
-                    </p>
-                  )}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-muted-foreground font-mono">
+                      {hasStarted && fixedTotal > 0
+                        ? `${completedSteps} / ${fixedTotal} steps`
+                        : ""}
+                    </span>
+                    {actionsRunUrl ? (
+                      <a
+                        href={actionsRunUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        View on GitHub Actions <ExternalLink className="w-3 h-3" />
+                      </a>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        Waiting for GitHub Actions to start…
+                      </p>
+                    )}
+                  </div>
                 </div>
               )
             })()}
@@ -601,7 +602,7 @@ export function ReleaseShell({
                   onClick={handleRelease}
                   disabled={!canRelease || noVersion || alreadyReleased}
                   className="w-full py-2.5 rounded-lg text-sm font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: "var(--green)", color: "#000" }}
+                  style={{ backgroundColor: "var(--green)", color: "#fff" }}
                   title={
                     !canRelease       ? "Repo must be provisioned first"
                     : noVersion       ? "Set a version in your config"

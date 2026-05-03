@@ -20,7 +20,7 @@ export function NewProjectButton() {
       <button
         onClick={() => setOpen(true)}
         className="flex items-center gap-2 text-sm px-3 py-2 rounded-md transition-colors"
-        style={{ backgroundColor: "var(--green)", color: "#000" }}
+        style={{ backgroundColor: "var(--green)", color: "#fff" }}
       >
         <Plus className="w-4 h-4" />
         New project

@@ -48,14 +48,12 @@ jobs:
           go-version: 'stable'
           cache: false
 
-      - name: Tidy modules
-        run: go mod tidy
-
       - name: Build
         env:
           GOOS: \${{ matrix.goos }}
           GOARCH: \${{ matrix.goarch }}
           CGO_ENABLED: '0'
+          GOFLAGS: '-mod=mod'
           REPO_NAME: \${{ github.event.repository.name }}
         run: |
           EXT=""

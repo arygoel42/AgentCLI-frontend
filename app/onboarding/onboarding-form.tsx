@@ -188,7 +188,7 @@ export function OnboardingForm({ firstName }: { firstName: string | null }) {
             onClick={handleNext}
             disabled={!canAdvance || submitting}
             className="flex items-center gap-2 text-sm px-4 py-2 rounded-md transition-colors disabled:opacity-50"
-            style={{ backgroundColor: "var(--green)", color: "#000" }}
+            style={{ backgroundColor: "var(--green)", color: "#fff" }}
           >
             {step === 2 ? (submitting ? "Finishing…" : "Finish") : "Continue"}
             {!submitting && <ArrowRight className="w-3.5 h-3.5" />}
