@@ -23,12 +23,16 @@ function client(): Octokit {
   return new Octokit({ auth: botToken() })
 }
 
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
+
 // mapWithConcurrency runs `fn` over `items` with at most `limit` in flight at once.
-// Avoids GitHub's secondary rate limit which fires when too many writes burst in parallel.
+// delayMs adds a pause after each item completes to stagger GitHub write requests
+// and avoid the secondary rate limit (triggered by write bursts, not just concurrency).
 export async function mapWithConcurrency<T, R>(
   items: T[],
   limit: number,
-  fn: (item: T, index: number) => Promise<R>
+  fn: (item: T, index: number) => Promise<R>,
+  delayMs = 0
 ): Promise<R[]> {
   const results: R[] = new Array(items.length)
   let cursor = 0
@@ -37,6 +41,7 @@ export async function mapWithConcurrency<T, R>(
       const idx = cursor++
       if (idx >= items.length) return
       results[idx] = await fn(items[idx], idx)
+      if (delayMs > 0) await sleep(delayMs)
     }
   }
   const workers = Array.from({ length: Math.min(limit, items.length) }, () => worker())
@@ -106,7 +111,7 @@ export async function pushInitialCommit(
   // 2. Create a blob for each file (concurrency-limited to dodge GitHub's secondary rate limit)
   const blobs = await mapWithConcurrency(
     Array.from(files.entries()),
-    5,
+    2,
     async ([path, content]) => {
       const { data } = await octokit.git.createBlob({
         owner,
@@ -115,7 +120,8 @@ export async function pushInitialCommit(
         encoding: "base64",
       })
       return { path, sha: data.sha }
-    }
+    },
+    120
   )
 
   // 3. Create a tree (no base_tree → fresh tree, drops the auto-init README)
@@ -165,7 +171,7 @@ export async function pushCommit(
 
   const blobs = await mapWithConcurrency(
     Array.from(files.entries()),
-    5,
+    2,
     async ([path, content]) => {
       const { data } = await octokit.git.createBlob({
         owner,
@@ -174,7 +180,8 @@ export async function pushCommit(
         encoding: "base64",
       })
       return { path, sha: data.sha }
-    }
+    },
+    120
   )
 
   const { data: tree } = await octokit.git.createTree({
