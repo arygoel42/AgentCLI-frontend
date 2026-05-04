@@ -170,6 +170,8 @@ export type ReleaseOptions = {
   notes?: string
   feedbackToken?: string
   feedbackEndpoint?: string
+  telemetryEndpoint?: string
+  telemetryToken?: string
 }
 
 export async function callRelease(
@@ -192,6 +194,8 @@ export async function callRelease(
   }
   if (opts.feedbackToken) form.append("feedback_token", opts.feedbackToken)
   if (opts.feedbackEndpoint) form.append("feedback_endpoint", opts.feedbackEndpoint)
+  if (opts.telemetryEndpoint) form.append("telemetry_endpoint", opts.telemetryEndpoint)
+  if (opts.telemetryToken) form.append("telemetry_token", opts.telemetryToken)
 
   const res = await fetch(`${engineUrl()}/release`, { method: "POST", body: form })
   await throwIfNotOk(res)
@@ -210,6 +214,11 @@ export type BuildOptions = {
   // as the CLI's telemetry_token — one identifier per CLI.
   feedbackToken?: string
   feedbackEndpoint?: string
+  // telemetryEndpoint/telemetryToken are baked into the generated binary's
+  // internal telemetry client. The token is used as the Bearer token when
+  // posting batched invocation events to telemetryEndpoint.
+  telemetryEndpoint?: string
+  telemetryToken?: string
 }
 
 export async function callBuild(
@@ -228,6 +237,8 @@ export async function callBuild(
   }
   if (opts.feedbackToken) form.append("feedback_token", opts.feedbackToken)
   if (opts.feedbackEndpoint) form.append("feedback_endpoint", opts.feedbackEndpoint)
+  if (opts.telemetryEndpoint) form.append("telemetry_endpoint", opts.telemetryEndpoint)
+  if (opts.telemetryToken) form.append("telemetry_token", opts.telemetryToken)
 
   const res = await fetch(`${engineUrl()}/build`, { method: "POST", body: form })
   await throwIfNotOk(res)

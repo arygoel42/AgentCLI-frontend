@@ -81,6 +81,8 @@ export async function POST(
       notes: (cli.skill_notes ?? "") as string,
       feedbackToken: cli.telemetry_token ?? undefined,
       feedbackEndpoint: process.env.FEEDBACK_ENDPOINT_URL || undefined,
+      telemetryEndpoint: process.env.TELEMETRY_INGEST_URL || undefined,
+      telemetryToken: cli.telemetry_token ?? undefined,
     })
     const zipBuffer = Buffer.from(await engineRes.arrayBuffer())
 

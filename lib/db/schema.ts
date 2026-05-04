@@ -1,4 +1,5 @@
 import { integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core"
+import { sql } from "drizzle-orm"
 
 export const providers = pgTable("providers", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -85,9 +86,56 @@ export const feedbackEvents = pgTable("feedback_events", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 })
 
+// cliEvents stores per-invocation telemetry emitted by generated CLI binaries.
+// The binary fires a non-blocking event after each command execution containing
+// only structural metadata (flag names, not values) and performance numbers.
+// Never contains flag values, API responses, or user PII.
+//
+// Run in Supabase to create this table:
+//   CREATE TABLE IF NOT EXISTS cli_events (
+//     id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+//     cli_id       uuid NOT NULL REFERENCES clis(id) ON DELETE CASCADE,
+//     cli_version  text NOT NULL,
+//     command      text NOT NULL,
+//     group_name   text,
+//     flags_used   text[] NOT NULL DEFAULT '{}',
+//     flag_count   int  NOT NULL DEFAULT 0,
+//     exit_code    int  NOT NULL,
+//     latency_ms   int  NOT NULL,
+//     error_type   text,
+//     error_code   int,
+//     output_bytes int  NOT NULL DEFAULT 0,
+//     session_id   text NOT NULL,
+//     occurred_at  timestamptz NOT NULL,
+//     created_at   timestamptz NOT NULL DEFAULT now()
+//   );
+//   CREATE INDEX IF NOT EXISTS cli_events_cli_occurred_idx  ON cli_events (cli_id, occurred_at DESC);
+//   CREATE INDEX IF NOT EXISTS cli_events_cli_command_idx   ON cli_events (cli_id, command, occurred_at DESC);
+export const cliEvents = pgTable("cli_events", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  cliId: uuid("cli_id")
+    .references(() => clis.id, { onDelete: "cascade" })
+    .notNull(),
+  cliVersion: text("cli_version").notNull(),
+  command: text("command").notNull(),
+  groupName: text("group_name"),
+  flagsUsed: text("flags_used").array().notNull().default(sql`'{}'::text[]`),
+  flagCount: integer("flag_count").notNull().default(0),
+  exitCode: integer("exit_code").notNull(),
+  latencyMs: integer("latency_ms").notNull(),
+  errorType: text("error_type"),
+  errorCode: integer("error_code"),
+  outputBytes: integer("output_bytes").notNull().default(0),
+  sessionId: text("session_id").notNull(),
+  occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+})
+
 export type Provider = typeof providers.$inferSelect
 export type NewProvider = typeof providers.$inferInsert
 export type CLI = typeof clis.$inferSelect
 export type NewCLI = typeof clis.$inferInsert
 export type FeedbackEvent = typeof feedbackEvents.$inferSelect
 export type NewFeedbackEvent = typeof feedbackEvents.$inferInsert
+export type CliEvent = typeof cliEvents.$inferSelect
+export type NewCliEvent = typeof cliEvents.$inferInsert

@@ -3,20 +3,21 @@
 import { useState, useCallback, useEffect, useRef } from "react"
 import { toast } from "sonner"
 import {
-  Terminal, Globe, Lock, FolderTree, BookOpen, MessageSquare,
+  Terminal, Globe, Lock, FolderTree, BookOpen, MessageSquare, BarChart2,
   Save, Plus, Trash2, GripVertical, ChevronRight, X, Info,
 } from "lucide-react"
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
 import { YamlPanel } from "./yaml-panel"
 import { AgentDocsTab } from "./agent-docs-tab"
 import { FeedbackTab } from "./feedback-tab"
+import { ObservabilityTab } from "./observability-tab"
 import { parseConfig, serializeConfig, type CliConfig, type ResourceNode } from "@/lib/parse-yml"
 import { saveConfig } from "@/app/dashboard/projects/[id]/actions"
 import type { PreviewApi, Command as ApiCommand } from "@/lib/engine"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Section = "cli" | "environments" | "security" | "resources" | "agent-docs" | "feedback"
+type Section = "cli" | "environments" | "security" | "resources" | "agent-docs" | "feedback" | "observability"
 
 const SECTION_YAML_KEY: Record<string, string> = {
   cli: "cli",
@@ -518,12 +519,13 @@ function ResourcesSection({ config, onChange, api }: { config: CliConfig; onChan
 // ─── Main ConfigEditor ────────────────────────────────────────────────────────
 
 const NAV_ITEMS: { id: Section; label: string; Icon: React.ComponentType<{ className?: string }> }[] = [
-  { id: "cli",          label: "CLI Identity",  Icon: Terminal },
-  { id: "environments", label: "Environments",  Icon: Globe },
-  { id: "security",     label: "Security",      Icon: Lock },
-  { id: "resources",    label: "Resources",     Icon: FolderTree },
-  { id: "agent-docs",   label: "llms.txt",    Icon: BookOpen },
-  { id: "feedback",     label: "Feedback",      Icon: MessageSquare },
+  { id: "cli",            label: "CLI Identity",   Icon: Terminal },
+  { id: "environments",   label: "Environments",   Icon: Globe },
+  { id: "security",       label: "Security",       Icon: Lock },
+  { id: "resources",      label: "Resources",      Icon: FolderTree },
+  { id: "agent-docs",     label: "llms.txt",       Icon: BookOpen },
+  { id: "feedback",       label: "Feedback",       Icon: MessageSquare },
+  { id: "observability",  label: "Observability",  Icon: BarChart2 },
 ]
 
 type ConfigEditorProps = {
@@ -629,6 +631,8 @@ export function ConfigEditor({ cliId, cliName, initialConfigYml, initialSkillNot
         />
       ) : activeSection === "feedback" ? (
         <FeedbackTab cliId={cliId} cliName={cliName} />
+      ) : activeSection === "observability" ? (
+        <ObservabilityTab cliId={cliId} />
       ) : (
         <ResizablePanelGroup direction="horizontal" className="flex-1 min-w-0">
           <ResizablePanel defaultSize={55} minSize={30}>

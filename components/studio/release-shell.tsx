@@ -266,8 +266,11 @@ export function ReleaseShell({
       setReleaseUrl(url)
       setReleasedVersion(ver ?? version)
 
-      // Poll GitHub Actions every 3 seconds until the build completes
+      // Poll GitHub Actions until the build completes.
+      // Interval starts at 6s (queued phase) and stays there — avoids GitHub's
+      // secondary rate limit which triggers on burst writes AND frequent reads.
       let currentRunId: number | null = null
+      let consecutiveErrors = 0
 
       async function pollActions() {
         try {
@@ -279,7 +282,24 @@ export function ReleaseShell({
           }
 
           const r = await fetch(`/api/releases/status?${params}`)
-          if (!r.ok) return
+
+          // On rate-limit or transient error, back off and skip this tick
+          if (!r.ok) {
+            consecutiveErrors++
+            if (consecutiveErrors >= 3) {
+              // 3 consecutive failures — reschedule at a longer interval
+              if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
+              pollIntervalRef.current = setInterval(pollActions, 15000)
+            }
+            return
+          }
+
+          consecutiveErrors = 0
+          // Restore normal interval if we were backed off
+          if (pollIntervalRef.current) {
+            clearInterval(pollIntervalRef.current)
+            pollIntervalRef.current = setInterval(pollActions, 6000)
+          }
 
           const d = await r.json()
 
@@ -320,7 +340,7 @@ export function ReleaseShell({
       }
 
       pollActions()
-      pollIntervalRef.current = setInterval(pollActions, 3000)
+      pollIntervalRef.current = setInterval(pollActions, 6000)
     } catch (err) {
       setStatus("failed")
       setError(err instanceof Error ? err.message : "Release failed")

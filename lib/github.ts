@@ -23,31 +23,6 @@ function client(): Octokit {
   return new Octokit({ auth: botToken() })
 }
 
-const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
-
-// mapWithConcurrency runs `fn` over `items` with at most `limit` in flight at once.
-// delayMs adds a pause after each item completes to stagger GitHub write requests
-// and avoid the secondary rate limit (triggered by write bursts, not just concurrency).
-export async function mapWithConcurrency<T, R>(
-  items: T[],
-  limit: number,
-  fn: (item: T, index: number) => Promise<R>,
-  delayMs = 0
-): Promise<R[]> {
-  const results: R[] = new Array(items.length)
-  let cursor = 0
-  async function worker() {
-    while (true) {
-      const idx = cursor++
-      if (idx >= items.length) return
-      results[idx] = await fn(items[idx], idx)
-      if (delayMs > 0) await sleep(delayMs)
-    }
-  }
-  const workers = Array.from({ length: Math.min(limit, items.length) }, () => worker())
-  await Promise.all(workers)
-  return results
-}
 
 export async function repoExists(name: string): Promise<boolean> {
   const octokit = client()
@@ -89,8 +64,8 @@ export async function createStagingRepo(name: string, description?: string): Pro
 }
 
 // pushInitialCommit pushes the generated source as a single commit on top of the
-// auto-init README commit. Sequence: get HEAD → blobs → tree (no base) → commit (parent=HEAD)
-// → update ref. The auto-init README is overwritten because we don't include it in the new tree.
+// auto-init README commit. Uses inline `content` in createTree (one API call) instead
+// of individual createBlob calls — eliminates the secondary rate limit fan-out entirely.
 export async function pushInitialCommit(
   owner: string,
   repo: string,
@@ -108,35 +83,20 @@ export async function pushInitialCommit(
   })
   const parentSha = ref.object.sha
 
-  // 2. Create a blob for each file (concurrency-limited to dodge GitHub's secondary rate limit)
-  const blobs = await mapWithConcurrency(
-    Array.from(files.entries()),
-    2,
-    async ([path, content]) => {
-      const { data } = await octokit.git.createBlob({
-        owner,
-        repo,
-        content: content.toString("base64"),
-        encoding: "base64",
-      })
-      return { path, sha: data.sha }
-    },
-    120
-  )
-
-  // 3. Create a tree (no base_tree → fresh tree, drops the auto-init README)
+  // 2. Create a tree with inline file content — GitHub creates the blobs internally.
+  //    One POST instead of N, completely avoids secondary rate limits.
   const { data: tree } = await octokit.git.createTree({
     owner,
     repo,
-    tree: blobs.map((b) => ({
-      path: b.path,
-      mode: "100644",
-      type: "blob",
-      sha: b.sha,
+    tree: Array.from(files.entries()).map(([path, content]) => ({
+      path,
+      mode: "100644" as const,
+      type: "blob" as const,
+      content: content.toString("utf-8"),
     })),
   })
 
-  // 4. Create a commit on top of the auto-init commit
+  // 3. Create a commit on top of the auto-init commit
   const { data: commit } = await octokit.git.createCommit({
     owner,
     repo,
@@ -145,7 +105,7 @@ export async function pushInitialCommit(
     parents: [parentSha],
   })
 
-  // 5. Fast-forward the branch to our new commit
+  // 4. Fast-forward the branch to our new commit
   await octokit.git.updateRef({
     owner,
     repo,
@@ -169,29 +129,15 @@ export async function pushCommit(
 ): Promise<string> {
   const octokit = client()
 
-  const blobs = await mapWithConcurrency(
-    Array.from(files.entries()),
-    2,
-    async ([path, content]) => {
-      const { data } = await octokit.git.createBlob({
-        owner,
-        repo,
-        content: content.toString("base64"),
-        encoding: "base64",
-      })
-      return { path, sha: data.sha }
-    },
-    120
-  )
-
+  // Inline content in createTree — one POST instead of N createBlob calls.
   const { data: tree } = await octokit.git.createTree({
     owner,
     repo,
-    tree: blobs.map((b) => ({
-      path: b.path,
-      mode: "100644",
-      type: "blob",
-      sha: b.sha,
+    tree: Array.from(files.entries()).map(([path, content]) => ({
+      path,
+      mode: "100644" as const,
+      type: "blob" as const,
+      content: content.toString("utf-8"),
     })),
   })
 

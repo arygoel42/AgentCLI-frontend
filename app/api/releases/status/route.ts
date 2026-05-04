@@ -73,6 +73,18 @@ export async function GET(req: NextRequest) {
           jobs: [],
         })
       }
+      // Return the run summary from the list response immediately — skip the
+      // extra getWorkflowRun + listJobs calls while still in the queued phase
+      // to halve the number of GitHub API calls per poll tick.
+      if (run.status === "queued") {
+        return Response.json({
+          runId: run.id,
+          runStatus: run.status,
+          runConclusion: run.conclusion,
+          runUrl: run.html_url,
+          jobs: [],
+        })
+      }
       resolvedRunId = run.id
     }
 
