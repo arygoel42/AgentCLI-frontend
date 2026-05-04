@@ -44,9 +44,9 @@ export function FeedbackTab({ cliId, cliName }: { cliId: string; cliName: string
           <div>
             <h3 className="text-sm font-semibold">Agent feedback</h3>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Submitted by agents via{" "}
+              Submitted by agents via {" "}
               <code className="rounded bg-muted px-1 py-0.5 font-mono">
-                {cliName} feedback &quot;...&quot;
+                feedback &quot;...&quot;
               </code>
             </p>
           </div>

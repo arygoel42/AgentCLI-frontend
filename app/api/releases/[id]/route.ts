@@ -54,18 +54,18 @@ jobs:
           GOARCH: \${{ matrix.goarch }}
           CGO_ENABLED: '0'
           GOFLAGS: '-mod=mod'
-          REPO_NAME: \${{ github.event.repository.name }}
         run: |
           EXT=""
           if [ "$GOOS" = "windows" ]; then EXT=".exe"; fi
-          CMD_DIR=$(cat .cli-name 2>/dev/null || ls cmd/ | head -1)
-          go build -o "$REPO_NAME-$GOOS-$GOARCH$EXT" ./cmd/$CMD_DIR
+          CLI_NAME=$(cat .cli-name 2>/dev/null || ls cmd/ | head -1)
+          go build -o "\${CLI_NAME}-\${GOOS}-\${GOARCH}\${EXT}" ./cmd/\${CLI_NAME}
+          echo "CLI_NAME=\${CLI_NAME}" >> \$GITHUB_ENV
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: \${{ matrix.goos }}-\${{ matrix.goarch }}
-          path: \${{ github.event.repository.name }}-\${{ matrix.goos }}-\${{ matrix.goarch }}*
+          path: \${{ env.CLI_NAME }}-\${{ matrix.goos }}-\${{ matrix.goarch }}*
 
   release:
     needs: build
@@ -198,7 +198,7 @@ export async function POST(
 
     // 3. Add install.sh — binary is named after the repo (REPO_NAME in the workflow),
     //    so the install script must use repoName, not the API spec's cliName.
-    const installScript = generateInstallScript(repoName, repoOwner, repoName)
+    const installScript = generateInstallScript(cliName, repoOwner, repoName)
     files.set("install.sh", Buffer.from(installScript, "utf-8"))
 
     // 4. Inject the GitHub Actions release workflow
