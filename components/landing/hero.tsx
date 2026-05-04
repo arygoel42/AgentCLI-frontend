@@ -7,7 +7,7 @@ export function Hero() {
   return (
     <section className="relative min-h-[85vh] flex flex-col items-center justify-center px-6 py-24 overflow-hidden text-center">
       <div className="relative z-10 max-w-5xl mx-auto space-y-10">
-        <h1 className="text-6xl md:text-7xl lg:text-8xl font-medium tracking-tight leading-[1.05]">
+        <h1 className="text-6xl md:text-7xl lg:text-8xl font-mono font-medium tracking-tight leading-[1.05]">
           Build agent interfaces from your {" "}
           <span style={{ color: "var(--green)" }}>API</span>
         </h1>

@@ -63,9 +63,6 @@ function JobStatusIcon({ status, conclusion }: { status: string; conclusion: str
   if (status === "completed") {
     return <AlertCircle className="w-3.5 h-3.5 shrink-0 text-red-400" />
   }
-  if (status === "in_progress") {
-    return <Loader2 className="w-3.5 h-3.5 shrink-0 animate-spin" style={{ color: "var(--green)" }} />
-  }
   return <div className="w-3.5 h-3.5 shrink-0 rounded-full border border-border opacity-40" />
 }
 
@@ -367,7 +364,7 @@ export function ReleaseShell({
       <div className="flex-1 overflow-hidden flex">
         {/* Main content */}
         <div className="flex-1 overflow-y-auto px-6 py-10">
-          <div className="max-w-xl w-full mx-auto space-y-8">
+          <div className="w-full space-y-8">
 
             {/* ── In progress — single bar + cycling word ── */}
             {status === "in_progress" && (() => {
