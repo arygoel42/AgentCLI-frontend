@@ -1,4 +1,5 @@
 import { Octokit } from "@octokit/rest"
+import _sodium from "libsodium-wrappers"
 
 export type StagingRepo = {
   owner: string
@@ -123,11 +124,16 @@ export async function pushCommit(
   owner: string,
   repo: string,
   files: Map<string, Buffer>,
-  parentSha: string,
+  _parentSha: string,
   message: string,
   branch: string = "main"
 ): Promise<string> {
   const octokit = client()
+
+  // Always fetch the live HEAD rather than trusting the stored SHA — the two
+  // can drift if a previous release attempt partially committed to the repo.
+  const { data: ref } = await octokit.git.getRef({ owner, repo, ref: `heads/${branch}` })
+  const parentSha = ref.object.sha
 
   // Inline content in createTree — one POST instead of N createBlob calls.
   const { data: tree } = await octokit.git.createTree({
@@ -171,6 +177,33 @@ export async function inviteCollaborator(
     repo,
     username,
     permission,
+  })
+}
+
+// Encrypts secretValue with the repo's libsodium public key and stores it as a
+// GitHub Actions secret. The bot token needs the `secrets` scope on the repo.
+export async function setRepoSecret(
+  owner: string,
+  repo: string,
+  secretName: string,
+  secretValue: string,
+): Promise<void> {
+  const octokit = client()
+
+  const { data: key } = await octokit.actions.getRepoPublicKey({ owner, repo })
+
+  await _sodium.ready
+  const binKey = _sodium.from_base64(key.key, _sodium.base64_variants.ORIGINAL)
+  const binSec = _sodium.from_string(secretValue)
+  const encBytes = _sodium.crypto_box_seal(binSec, binKey)
+  const encryptedValue = _sodium.to_base64(encBytes, _sodium.base64_variants.ORIGINAL)
+
+  await octokit.actions.createOrUpdateRepoSecret({
+    owner,
+    repo,
+    secret_name: secretName,
+    encrypted_value: encryptedValue,
+    key_id: key.key_id,
   })
 }
 

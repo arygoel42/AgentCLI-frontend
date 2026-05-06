@@ -3,9 +3,9 @@ export const maxDuration = 60
 import { auth } from "@/lib/auth"
 import { createClient } from "@/utils/supabase/server"
 import { callBuild } from "@/lib/engine"
-import { generateInstallScript } from "@/lib/github-releases"
+import { generateInstallScript, generateNpmPackage } from "@/lib/github-releases"
 import { parseConfig } from "@/lib/parse-yml"
-import { pushCommit } from "@/lib/github"
+import { pushCommit, setRepoSecret } from "@/lib/github"
 import { NextRequest } from "next/server"
 import AdmZip from "adm-zip"
 import { Octokit } from "@octokit/rest"
@@ -86,6 +86,17 @@ jobs:
         with:
           files: binaries/*
           generate_release_notes: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Publish to npm
+        run: npm publish --access public
+        working-directory: npm
+        env:
+          NODE_AUTH_TOKEN: \${{ secrets.NPM_TOKEN }}
 `
 
 function botToken(): string {
@@ -196,23 +207,27 @@ export async function POST(
       throw new Error("Engine returned an empty source zip")
     }
 
-    // 3. Add install.sh — binary is named after the repo (REPO_NAME in the workflow),
-    //    so the install script must use repoName, not the API spec's cliName.
+    // 3. Add install.sh and npm package files
     const installScript = generateInstallScript(cliName, repoOwner, repoName)
     files.set("install.sh", Buffer.from(installScript, "utf-8"))
+
+    const npmFiles = generateNpmPackage(cliName, repoOwner, repoName, version)
+    for (const [path, content] of npmFiles) {
+      files.set(path, Buffer.from(content, "utf-8"))
+    }
 
     // 4. Inject the GitHub Actions release workflow
     files.set(".github/workflows/release.yml", Buffer.from(RELEASE_WORKFLOW, "utf-8"))
 
-    // 5. Push all files as a new commit on top of the last known commit
-    //    Note: bot token needs `workflow` scope to write .github/workflows/ files
-    const commitSha = await pushCommit(
-      repoOwner,
-      repoName,
-      files,
-      cli.last_commit_sha,
-      `release: v${version}`
-    )
+    // 5. Push commit and set NPM_TOKEN repo secret in parallel.
+    //    The secret must exist before the tag push triggers the workflow.
+    const npmToken = process.env.NPM_TOKEN
+    const [commitSha] = await Promise.all([
+      pushCommit(repoOwner, repoName, files, cli.last_commit_sha, `release: v${version}`),
+      npmToken
+        ? setRepoSecret(repoOwner, repoName, "NPM_TOKEN", npmToken)
+        : Promise.resolve(),
+    ])
 
     // 6. Create the tag — this is the push event that triggers the Actions workflow
     const octokit = new Octokit({ auth: botToken() })

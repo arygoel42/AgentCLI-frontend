@@ -235,6 +235,8 @@ export function ReleaseShell({
       ? `curl -fsSL https://github.com/${repoOwner}/${repoName}/releases/latest/download/install.sh | sh`
       : null
 
+  const npmInstallCmd = repoOwner ? `npm install -g @${repoOwner}/${cliName}` : null
+
   const historyEntries =
     latestReleaseVersion
       ? [{ version: latestReleaseVersion, url: initialReleaseUrl, releasedAt: latestReleaseAt }]
@@ -491,6 +493,19 @@ export function ReleaseShell({
                 <div className="space-y-5">
                   <h2 className="text-sm font-semibold">Install instructions</h2>
 
+                  {npmInstallCmd && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-medium flex items-center gap-1.5">
+                        <Box className="w-3.5 h-3.5 text-muted-foreground" />
+                        npm (all platforms)
+                      </p>
+                      <CodeBlock code={npmInstallCmd} />
+                      <p className="text-[10px] text-muted-foreground pl-0.5">
+                        Works on macOS, Linux, and Windows. Requires Node.js.
+                      </p>
+                    </div>
+                  )}
+
                   {installOneliner && (
                     <div className="space-y-2">
                       <p className="text-xs font-medium flex items-center gap-1.5">
@@ -607,11 +622,18 @@ export function ReleaseShell({
                     description="Commit a formula to a shared tap so users can brew install your CLI."
                   />
 
-                  <ComingSoonCard
-                    icon={Box}
-                    label="npm / npx"
-                    description="Publish a thin npm wrapper so users can run your CLI with npx."
-                  />
+                  <div className="rounded-lg border border-border p-4 flex items-start gap-3">
+                    <Box className="w-4 h-4 shrink-0 mt-0.5 text-muted-foreground" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold">npm</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Publishes a wrapper package to npm so users on any OS — including Windows — can install with <code className="font-mono">npm install -g</code>.
+                      </p>
+                    </div>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded border border-border text-muted-foreground shrink-0">
+                      Always on
+                    </span>
+                  </div>
                 </div>
 
                 {/* Release button */}
@@ -634,6 +656,50 @@ export function ReleaseShell({
                   <p className="text-xs text-center text-muted-foreground">
                     Repo provisioning must complete before you can release.
                   </p>
+                )}
+
+                {/* Last release — install commands */}
+                {releasedVersion && (
+                  <div className="rounded-lg border border-border p-4 space-y-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-3.5 h-3.5 shrink-0" style={{ color: "var(--green)" }} />
+                        <span className="text-xs font-mono font-semibold">v{releasedVersion}</span>
+                        {releasedAt && (
+                          <span className="text-[10px] text-muted-foreground">{formatDate(releasedAt)}</span>
+                        )}
+                      </div>
+                      {releaseUrl && (
+                        <a
+                          href={releaseUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          GitHub <ExternalLink className="w-2.5 h-2.5" />
+                        </a>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      {npmInstallCmd && (
+                        <div className="space-y-1">
+                          <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                            <Box className="w-3 h-3" /> npm
+                          </p>
+                          <CodeBlock code={npmInstallCmd} />
+                        </div>
+                      )}
+                      {installOneliner && (
+                        <div className="space-y-1">
+                          <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                            <Terminal className="w-3 h-3" /> macOS + Linux
+                          </p>
+                          <CodeBlock code={installOneliner} />
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
             )}

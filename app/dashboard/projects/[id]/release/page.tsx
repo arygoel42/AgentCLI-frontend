@@ -52,11 +52,12 @@ export default async function ReleasePage({
 
   const parsed = parseConfig(cli.config_yml ?? "")
   const version = parsed.cli?.version ?? null
+  const cliName = parsed.cli?.name ?? cli.name
 
   return (
     <ReleaseShell
       cliId={cli.id}
-      cliName={cli.name}
+      cliName={cliName}
       version={version}
       latestReleaseVersion={cli.latest_release_version ?? null}
       latestReleaseUrl={cli.latest_release_url ?? null}
