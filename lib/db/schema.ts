@@ -1,4 +1,4 @@
-import { integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core"
+import { boolean, integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
 export const providers = pgTable("providers", {
@@ -63,6 +63,8 @@ export const clis = pgTable("clis", {
   buildsSinceRelease: integer("builds_since_release").default(0).notNull(),
   lastBuildAt: timestamp("last_build_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  telemetryEnabled: boolean("telemetry_enabled").default(true).notNull(),
+  feedbackEnabled: boolean("feedback_enabled").default(true).notNull(),
 })
 
 // feedbackEvents stores agent-submitted feedback about generated CLIs.

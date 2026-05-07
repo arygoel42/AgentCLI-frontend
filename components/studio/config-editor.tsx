@@ -4,20 +4,21 @@ import { useState, useCallback, useEffect, useRef } from "react"
 import { toast } from "sonner"
 import {
   Terminal, Globe, Lock, FolderTree, BookOpen, MessageSquare, BarChart2,
-  Save, Plus, Trash2, GripVertical, ChevronRight, X, Info,
+  Save, Plus, Trash2, GripVertical, ChevronRight, X, Info, Settings,
 } from "lucide-react"
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
 import { YamlPanel } from "./yaml-panel"
 import { AgentDocsTab } from "./agent-docs-tab"
 import { FeedbackTab } from "./feedback-tab"
 import { ObservabilityTab } from "./observability-tab"
+import { SettingsTab } from "./settings-tab"
 import { parseConfig, serializeConfig, type CliConfig, type ResourceNode } from "@/lib/parse-yml"
 import { saveConfig } from "@/app/dashboard/projects/[id]/actions"
 import type { PreviewApi, Command as ApiCommand } from "@/lib/engine"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Section = "cli" | "environments" | "security" | "resources" | "agent-docs" | "feedback" | "observability"
+type Section = "cli" | "environments" | "security" | "resources" | "agent-docs" | "feedback" | "observability" | "settings"
 
 const SECTION_YAML_KEY: Record<string, string> = {
   cli: "cli",
@@ -526,6 +527,7 @@ const NAV_ITEMS: { id: Section; label: string; Icon: React.ComponentType<{ class
   { id: "agent-docs",     label: "llms.txt",       Icon: BookOpen },
   { id: "feedback",       label: "Feedback",       Icon: MessageSquare },
   { id: "observability",  label: "Observability",  Icon: BarChart2 },
+  { id: "settings",       label: "Settings",       Icon: Settings },
 ]
 
 type ConfigEditorProps = {
@@ -535,9 +537,11 @@ type ConfigEditorProps = {
   initialSkillNotes: string
   llmsText: string
   api: PreviewApi
+  initialTelemetryEnabled: boolean
+  initialFeedbackEnabled: boolean
 }
 
-export function ConfigEditor({ cliId, cliName, initialConfigYml, initialSkillNotes, llmsText, api }: ConfigEditorProps) {
+export function ConfigEditor({ cliId, cliName, initialConfigYml, initialSkillNotes, llmsText, api, initialTelemetryEnabled, initialFeedbackEnabled }: ConfigEditorProps) {
   const [config, setConfig] = useState<CliConfig>(() => parseConfig(initialConfigYml))
   const [yamlStr, setYamlStr] = useState(initialConfigYml)
   const [activeSection, setActiveSection] = useState<Section>("cli")
@@ -633,6 +637,12 @@ export function ConfigEditor({ cliId, cliName, initialConfigYml, initialSkillNot
         <FeedbackTab cliId={cliId} cliName={cliName} />
       ) : activeSection === "observability" ? (
         <ObservabilityTab cliId={cliId} />
+      ) : activeSection === "settings" ? (
+        <SettingsTab
+          cliId={cliId}
+          initialTelemetryEnabled={initialTelemetryEnabled}
+          initialFeedbackEnabled={initialFeedbackEnabled}
+        />
       ) : (
         <ResizablePanelGroup direction="horizontal" className="flex-1 min-w-0">
           <ResizablePanel defaultSize={55} minSize={30}>

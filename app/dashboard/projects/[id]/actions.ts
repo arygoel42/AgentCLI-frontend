@@ -55,3 +55,20 @@ export async function saveSkillNotes(cliId: string, notes: string): Promise<void
 
   if (error) throw new Error(error.message)
 }
+
+export async function saveDataSettings(
+  cliId: string,
+  settings: { telemetryEnabled: boolean; feedbackEnabled: boolean }
+): Promise<void> {
+  const { supabase } = await getOwnedCli(cliId)
+
+  const { error } = await supabase
+    .from("clis")
+    .update({
+      telemetry_enabled: settings.telemetryEnabled,
+      feedback_enabled: settings.feedbackEnabled,
+    })
+    .eq("id", cliId)
+
+  if (error) throw new Error(error.message)
+}

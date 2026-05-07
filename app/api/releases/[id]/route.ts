@@ -130,7 +130,7 @@ export async function POST(
   const { data: cli } = await supabase
     .from("clis")
     .select(
-      "id, provider_id, name, spec_content, spec_filename, config_yml, module_path, skill_notes, repo_owner, repo_name, repo_url, provisioning_status, release_status, latest_release_version, telemetry_token, last_commit_sha"
+      "id, provider_id, name, spec_content, spec_filename, config_yml, module_path, skill_notes, repo_owner, repo_name, repo_url, provisioning_status, release_status, latest_release_version, telemetry_token, last_commit_sha, telemetry_enabled, feedback_enabled"
     )
     .eq("id", id)
     .single()
@@ -186,10 +186,10 @@ export async function POST(
       configYml: cli.config_yml ?? undefined,
       modulePath: cli.module_path ?? undefined,
       notes: (cli.skill_notes ?? "") as string,
-      feedbackToken: cli.telemetry_token ?? undefined,
-      feedbackEndpoint: process.env.FEEDBACK_ENDPOINT_URL || undefined,
-      telemetryEndpoint: process.env.TELEMETRY_INGEST_URL || undefined,
-      telemetryToken: cli.telemetry_token ?? undefined,
+      feedbackToken: cli.feedback_enabled ? (cli.telemetry_token ?? undefined) : undefined,
+      feedbackEndpoint: cli.feedback_enabled ? (process.env.FEEDBACK_ENDPOINT_URL || undefined) : undefined,
+      telemetryEndpoint: cli.telemetry_enabled ? (process.env.TELEMETRY_INGEST_URL || undefined) : undefined,
+      telemetryToken: cli.telemetry_enabled ? (cli.telemetry_token ?? undefined) : undefined,
     })
     const zipBuffer = Buffer.from(await engineRes.arrayBuffer())
 

@@ -19,6 +19,8 @@ type StudioShellProps = {
     invite_sent_at?: string | null
     invite_accepted_at?: string | null
     latest_release_version?: string | null
+    telemetry_enabled: boolean
+    feedback_enabled: boolean
   }
   previewData: PreviewResponse
 }
@@ -45,6 +47,8 @@ export function StudioShell({ cli, previewData }: StudioShellProps) {
           initialSkillNotes={cli.skill_notes}
           llmsText={previewData.llms_text}
           api={previewData.api}
+          initialTelemetryEnabled={cli.telemetry_enabled}
+          initialFeedbackEnabled={cli.feedback_enabled}
         />
       </div>
     </div>

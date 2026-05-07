@@ -28,7 +28,7 @@ export default async function ProjectPage({
   const { data: cli } = await supabase
     .from("clis")
     .select(
-      "id, name, provider_id, config_yml, spec_content, spec_filename, preview_json, skill_notes, repo_url, repo_owner, repo_name, invite_sent_at, invite_accepted_at, provisioning_status, latest_release_version"
+      "id, name, provider_id, config_yml, spec_content, spec_filename, preview_json, skill_notes, repo_url, repo_owner, repo_name, invite_sent_at, invite_accepted_at, provisioning_status, latest_release_version, telemetry_enabled, feedback_enabled"
     )
     .eq("id", id)
     .single()
@@ -86,6 +86,8 @@ export default async function ProjectPage({
         invite_sent_at: cli.invite_sent_at ?? null,
         invite_accepted_at: cli.invite_accepted_at ?? null,
         latest_release_version: cli.latest_release_version ?? null,
+        telemetry_enabled: cli.telemetry_enabled ?? true,
+        feedback_enabled: cli.feedback_enabled ?? true,
       }}
       previewData={previewData}
     />
