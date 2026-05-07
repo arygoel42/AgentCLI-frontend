@@ -640,6 +640,7 @@ export function ConfigEditor({ cliId, cliName, initialConfigYml, initialSkillNot
       ) : activeSection === "settings" ? (
         <SettingsTab
           cliId={cliId}
+          cliName={cliName}
           initialTelemetryEnabled={initialTelemetryEnabled}
           initialFeedbackEnabled={initialFeedbackEnabled}
         />

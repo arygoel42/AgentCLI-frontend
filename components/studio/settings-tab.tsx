@@ -3,8 +3,19 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { Activity, MessageSquare } from "lucide-react"
-import { saveDataSettings } from "@/app/dashboard/projects/[id]/actions"
+import { Activity, MessageSquare, Loader2, Trash2 } from "lucide-react"
+import { saveDataSettings, deleteProject } from "@/app/dashboard/projects/[id]/actions"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 function Toggle({
   enabled,
@@ -31,15 +42,17 @@ function Toggle({
 
 type SettingsTabProps = {
   cliId: string
+  cliName: string
   initialTelemetryEnabled: boolean
   initialFeedbackEnabled: boolean
 }
 
-export function SettingsTab({ cliId, initialTelemetryEnabled, initialFeedbackEnabled }: SettingsTabProps) {
+export function SettingsTab({ cliId, cliName, initialTelemetryEnabled, initialFeedbackEnabled }: SettingsTabProps) {
   const router = useRouter()
   const [telemetryEnabled, setTelemetryEnabled] = useState(initialTelemetryEnabled)
   const [feedbackEnabled, setFeedbackEnabled] = useState(initialFeedbackEnabled)
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const dirty = telemetryEnabled !== initialTelemetryEnabled || feedbackEnabled !== initialFeedbackEnabled
 
@@ -56,9 +69,21 @@ export function SettingsTab({ cliId, initialTelemetryEnabled, initialFeedbackEna
     }
   }
 
+  async function handleDelete() {
+    setDeleting(true)
+    try {
+      await deleteProject(cliId)
+      toast.success("Project deleted")
+      router.push("/dashboard")
+    } catch {
+      toast.error("Failed to delete project")
+      setDeleting(false)
+    }
+  }
+
   return (
     <div className="flex-1 min-w-0 overflow-y-auto">
-      <div className="p-6 max-w-lg space-y-8">
+      <div className="p-6 space-y-8">
         <div>
           <h3 className="text-sm font-semibold">Data collection</h3>
           <p className="text-xs text-muted-foreground mt-1">
@@ -67,7 +92,6 @@ export function SettingsTab({ cliId, initialTelemetryEnabled, initialFeedbackEna
         </div>
 
         <div className="space-y-4">
-          {/* Telemetry toggle */}
           <div className="flex items-start justify-between gap-4 rounded-xl border border-border bg-secondary/10 p-4">
             <div className="flex items-start gap-3">
               <Activity className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
@@ -81,7 +105,6 @@ export function SettingsTab({ cliId, initialTelemetryEnabled, initialFeedbackEna
             <Toggle enabled={telemetryEnabled} onChange={setTelemetryEnabled} />
           </div>
 
-          {/* Feedback toggle */}
           <div className="flex items-start justify-between gap-4 rounded-xl border border-border bg-secondary/10 p-4">
             <div className="flex items-start gap-3">
               <MessageSquare className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
@@ -89,7 +112,8 @@ export function SettingsTab({ cliId, initialTelemetryEnabled, initialFeedbackEna
                 <p className="text-sm font-medium">Feedback command</p>
                 <p className="text-xs text-muted-foreground">
                   Adds a <code className="font-mono text-[11px]">feedback</code> command to the CLI
-                  so agents and users can send messages directly to your dashboard.                </p>
+                  so agents and users can send messages directly to your dashboard.
+                </p>
               </div>
             </div>
             <Toggle enabled={feedbackEnabled} onChange={setFeedbackEnabled} />
@@ -104,6 +128,41 @@ export function SettingsTab({ cliId, initialTelemetryEnabled, initialFeedbackEna
         >
           {saving ? "Saving…" : "Save settings"}
         </button>
+
+        <div className="border-t border-border pt-8">
+          <h3 className="text-sm font-semibold text-red-500">Danger zone</h3>
+          <p className="text-xs text-muted-foreground mt-1 mb-4">
+            Permanently delete this project and all its data.
+          </p>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button
+                disabled={deleting}
+                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border border-red-500/40 text-red-500 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+              >
+                {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                Delete project
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete {cliName}?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This permanently deletes the project, spec, and config. This cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDelete}
+                  className="bg-red-500 hover:bg-red-600 text-white"
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </div>
     </div>
   )

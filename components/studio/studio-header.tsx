@@ -2,20 +2,8 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Download, Loader2, Trash2, Rocket } from "lucide-react"
+import { Download, Loader2, Rocket } from "lucide-react"
 import { toast } from "sonner"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { deleteProject } from "@/app/dashboard/projects/[id]/actions"
 import { ProvisioningPill } from "./provisioning-pill"
 
 type ProvisioningStatus = "pending" | "in_progress" | "completed" | "failed"
@@ -45,7 +33,6 @@ export function StudioHeader({
 }: StudioHeaderProps) {
   const router = useRouter()
   const [building, setBuilding] = useState(false)
-  const [deleting, setDeleting] = useState(false)
   const [liveStatus, setLiveStatus] = useState<ProvisioningStatus>(provisioningStatus)
 
   const buildReady = liveStatus === "completed"
@@ -71,18 +58,6 @@ export function StudioHeader({
       toast.error(err instanceof Error ? err.message : "Build failed")
     } finally {
       setBuilding(false)
-    }
-  }
-
-  async function handleDelete() {
-    setDeleting(true)
-    try {
-      await deleteProject(cliId)
-      toast.success("Project deleted")
-      router.push("/dashboard")
-    } catch {
-      toast.error("Failed to delete project")
-      setDeleting(false)
     }
   }
 
@@ -115,35 +90,6 @@ export function StudioHeader({
             if (s === "completed") router.refresh()
           }}
         />
-
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <button
-              disabled={deleting}
-              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border border-border text-muted-foreground hover:text-red-500 hover:border-red-500/50 transition-colors disabled:opacity-50"
-            >
-              {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-              Delete
-            </button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete {cliName}?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This permanently deletes the project, spec, and config. This cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDelete}
-                className="bg-red-500 hover:bg-red-600 text-white"
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
 
         <button
           onClick={() => router.push(`/dashboard/projects/${cliId}/release`)}
