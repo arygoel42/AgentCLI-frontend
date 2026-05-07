@@ -12,7 +12,11 @@ type CliEventRow = {
   output_bytes: number
   session_id: string
   occurred_at: string
+  caller_type: string | null
+  agent_type: string | null
 }
+
+type CallerFilter = "all" | "human" | "agent"
 
 function rangeToMs(range: string): number {
   if (range === "24h") return 24 * 60 * 60 * 1000
@@ -60,16 +64,26 @@ export async function GET(
   }
 
   const range = req.nextUrl.searchParams.get("range") ?? "7d"
+  const callerParam = req.nextUrl.searchParams.get("caller") ?? "all"
+  const callerFilter: CallerFilter = ["all", "human", "agent"].includes(callerParam)
+    ? callerParam as CallerFilter
+    : "all"
   const cutoff = new Date(Date.now() - rangeToMs(range)).toISOString()
 
   // Fetch up to 10k events for the range — computed in JS for flexibility
-  const { data: events, error } = await supabase
+  let query = supabase
     .from("cli_events")
-    .select("command, group_name, flags_used, exit_code, latency_ms, error_type, output_bytes, session_id, occurred_at")
+    .select("command, group_name, flags_used, exit_code, latency_ms, error_type, output_bytes, session_id, occurred_at, caller_type, agent_type")
     .eq("cli_id", id)
     .gte("occurred_at", cutoff)
     .order("occurred_at", { ascending: false })
     .limit(10000)
+
+  if (callerFilter !== "all") {
+    query = query.eq("caller_type", callerFilter)
+  }
+
+  const { data: events, error } = await query
 
   if (error) {
     console.error("[observability]", error)
@@ -172,6 +186,28 @@ export async function GET(
     .sort((a, b) => b.count - a.count)
     .slice(0, 20)
 
+  // ── Caller breakdown ──────────────────────────────────────────────────────────
+
+  const breakdownMap = { human: 0, agent: 0, unknown: 0 }
+  const agentTypeMap = new Map<string, number>()
+
+  for (const r of rows) {
+    const ct = r.caller_type
+    if (ct === "human") breakdownMap.human++
+    else if (ct === "agent") breakdownMap.agent++
+    else breakdownMap.unknown++
+
+    if (ct === "agent" && r.agent_type) {
+      agentTypeMap.set(r.agent_type, (agentTypeMap.get(r.agent_type) ?? 0) + 1)
+    }
+  }
+
+  const agentTypes = Array.from(agentTypeMap.entries())
+    .map(([type, count]) => ({ type, count }))
+    .sort((a, b) => b.count - a.count)
+
+  const callerBreakdown = { ...breakdownMap, agentTypes }
+
   // ── Daily series ──────────────────────────────────────────────────────────────
 
   const dayMap = new Map<string, { invocations: number; errors: number }>()
@@ -196,6 +232,7 @@ export async function GET(
       activeSessionsLast24h,
       isActive,
     },
+    callerBreakdown,
     commands,
     agentSignals,
     errors,

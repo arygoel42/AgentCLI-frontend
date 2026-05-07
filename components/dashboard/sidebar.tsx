@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
-import { FolderOpen, Settings, LogOut, KeyRound, Flower, PanelLeftClose, PanelLeftOpen } from "lucide-react"
+import { FolderOpen, Settings, LogOut, KeyRound, PanelLeftClose, PanelLeftOpen } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -46,9 +46,8 @@ export function Sidebar() {
           collapsed ? "px-0 py-5 justify-center" : "px-4 py-5 gap-2"
         )}
       >
-        <Flower className="w-4 h-4 shrink-0" style={{ color: "var(--green)" }} />
         {!collapsed && (
-          <span className="font-bold tracking-tight text-lg">
+          <span className="font-mono font-medium tracking-tight text-lg">
             pe<span style={{ color: "var(--green)" }}>t</span>l
           </span>
         )}

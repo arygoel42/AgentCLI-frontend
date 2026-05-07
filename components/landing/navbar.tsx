@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
-import { Flower } from "lucide-react"
+// import { Flower } from "lucide-react"
 import { LoginDialog } from "@/components/auth/login-dialog"
 import { UserMenu } from "@/components/auth/user-menu"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -15,7 +15,7 @@ export function Navbar() {
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/90 backdrop-blur-md">
       <div className="w-full px-8 flex items-center justify-between relative" style={{ height: '72px' }}>
         <Link href="/" className="flex items-center gap-2.5">
-          <Flower className="w-6 h-6" style={{ color: "var(--green)" }} />
+          {/* <Flower className="w-6 h-6" style={{ color: "var(--green)" }} /> */}
           <span className="font-bold tracking-tight text-2xl">
             pe<span style={{ color: "var(--green)" }}>t</span>l
           </span>

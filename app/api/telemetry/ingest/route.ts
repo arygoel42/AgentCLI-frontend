@@ -1,6 +1,8 @@
 import { createClient } from "@/utils/supabase/server"
 import { NextRequest } from "next/server"
 
+const VALID_CALLER_TYPES = new Set(["human", "agent"])
+
 type RawEvent = {
   command?: unknown
   group?: unknown
@@ -22,6 +24,10 @@ type RawEvent = {
   version?: unknown
   occurred_at?: unknown
   occurredAt?: unknown
+  caller_type?: unknown
+  callerType?: unknown
+  agent_type?: unknown
+  agentType?: unknown
 }
 
 // POST /api/telemetry/ingest
@@ -96,6 +102,14 @@ export async function POST(req: NextRequest) {
       const errorType = e.error_type ?? e.errorType
       const errorCode = e.error_code ?? e.errorCode
       const outputBytes = e.output_bytes ?? e.outputBytes
+      const callerTypeRaw = e.caller_type ?? e.callerType
+      const callerType = typeof callerTypeRaw === "string" && VALID_CALLER_TYPES.has(callerTypeRaw)
+        ? callerTypeRaw
+        : null
+      const agentTypeRaw = e.agent_type ?? e.agentType
+      const agentType = typeof agentTypeRaw === "string" && agentTypeRaw.length > 0
+        ? agentTypeRaw.slice(0, 50)
+        : null
 
       return {
         cli_id: cli.id,
@@ -111,6 +125,8 @@ export async function POST(req: NextRequest) {
         output_bytes: typeof outputBytes === "number" ? Math.max(0, outputBytes) : 0,
         session_id: sessionId.slice(0, 64),
         occurred_at: typeof occurredAt === "string" ? occurredAt : new Date().toISOString(),
+        caller_type: callerType,
+        agent_type: agentType,
       }
     })
     .filter((r): r is NonNullable<typeof r> => r !== null)

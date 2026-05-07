@@ -129,6 +129,10 @@ export const cliEvents = pgTable("cli_events", {
   sessionId: text("session_id").notNull(),
   occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  // Nullable — populated by CLIs built after caller-type detection was added.
+  // Null rows are treated as "unknown" in the studio.
+  callerType: text("caller_type"), // "human" | "agent" | "ci"
+  agentType: text("agent_type"),   // "claude_code" | "cursor" | "cline" | ...
 })
 
 export type Provider = typeof providers.$inferSelect

@@ -12,11 +12,8 @@ export function FooterCta() {
         style={{ background: "radial-gradient(ellipse 60% 40% at 50% 100%, var(--green-glow), transparent)" }}
       />
       <div className="max-w-2xl mx-auto text-center space-y-8 relative z-10">
-        <p className="text-muted-foreground text-lg">
-          Built for the agent era.
-        </p>
         <h2 className="text-3xl md:text-5xl font-medium tracking-tight">
-          Generate your <span style={{ color: "var(--green)" }}>CLI</span>.
+          Build for <span style={{ color: "var(--green)" }}>Agents</span>.
         </h2>
         {/* green accent rule */}
         <div className="flex justify-center">

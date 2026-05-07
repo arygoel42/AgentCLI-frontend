@@ -43,7 +43,7 @@ export function TopBar({ provider }: { provider: ProviderInfo }) {
     <>
       <header className="h-14 shrink-0 border-b border-border bg-background flex items-center justify-between px-4 sticky top-0 z-30">
         <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <Flower className="w-4 h-4" style={{ color: "var(--green)" }} />
+          {/* <Flower className="w-4 h-4" style={{ color: "var(--green)" }} /> */}
           <span className="font-bold tracking-tight text-lg">
             pe<span style={{ color: "var(--green)" }}>t</span>l
           </span>

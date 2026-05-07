@@ -27,6 +27,16 @@ type ObsAgentSignals = {
   helpCallRate: number
 }
 
+type ObsCallerBreakdown = {
+  human: number
+  agent: number
+  ci: number
+  unknown: number
+  agentTypes: { type: string; count: number }[]
+}
+
+type CallerFilter = "all" | "human" | "agent"
+
 type ObsError = {
   errorType: string
   command: string
@@ -41,6 +51,7 @@ type ObsDayPoint = {
 
 type ObsData = {
   summary: ObsSummary
+  callerBreakdown: ObsCallerBreakdown
   commands: ObsCommand[]
   agentSignals: ObsAgentSignals
   errors: ObsError[]
@@ -53,10 +64,6 @@ function pct(n: number) {
   return `${(n * 100).toFixed(1)}%`
 }
 
-function ms(n: number) {
-  if (n >= 1000) return `${(n / 1000).toFixed(1)}s`
-  return `${n}ms`
-}
 
 function tokenColor(tokens: number): string {
   if (tokens > 2000) return "#f87171"
@@ -104,15 +111,14 @@ function Sparkline({ series, height = 40 }: { series: ObsDayPoint[]; height?: nu
     <div className="flex items-end gap-px" style={{ height }}>
       {series.map((d) => {
         const barH = Math.max(2, (d.invocations / max) * height)
-        const hasError = d.errors > 0
         return (
           <div
             key={d.date}
-            title={`${d.date}: ${d.invocations} calls, ${d.errors} errors`}
+            title={`${d.date}: ${d.invocations} calls`}
             className="flex-1 rounded-sm transition-opacity hover:opacity-80 cursor-default"
             style={{
               height: barH,
-              backgroundColor: hasError ? "rgba(248,113,113,0.6)" : "var(--green)",
+              backgroundColor: "var(--green)",
               minWidth: 2,
               maxWidth: `${w}%`,
             }}
@@ -128,13 +134,14 @@ export function ObservabilityTab({ cliId }: { cliId: string }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [range, setRange] = useState<Range>("7d")
+  const [callerFilter, setCallerFilter] = useState<CallerFilter>("all")
   const [sortBy, setSortBy] = useState<"count" | "errorRate" | "avgTokens">("count")
 
-  async function load(r: Range) {
+  async function load(r: Range, caller: CallerFilter) {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`/api/observability/${cliId}?range=${r}`, { cache: "no-store" })
+      const res = await fetch(`/api/observability/${cliId}?range=${r}&caller=${caller}`, { cache: "no-store" })
       const body = await res.json()
       if (!res.ok) throw new Error(body.error ?? "Failed to load observability data")
       setData(body as ObsData)
@@ -146,9 +153,9 @@ export function ObservabilityTab({ cliId }: { cliId: string }) {
   }
 
   useEffect(() => {
-    void load(range)
+    void load(range, callerFilter)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cliId, range])
+  }, [cliId, range, callerFilter])
 
   const sortedCommands = data
     ? [...data.commands].sort((a, b) => {
@@ -183,6 +190,21 @@ export function ObservabilityTab({ cliId }: { cliId: string }) {
             )}
           </div>
           <div className="flex items-center gap-2">
+            {(["all", "human", "agent"] as CallerFilter[]).map((c) => (
+              <button
+                key={c}
+                onClick={() => setCallerFilter(c)}
+                className="text-[11px] px-2.5 py-1 rounded-md border transition-colors capitalize"
+                style={
+                  callerFilter === c
+                    ? { borderColor: "var(--green)", backgroundColor: "var(--green-glow)", color: "var(--green)" }
+                    : { borderColor: "var(--border)", color: "var(--muted-foreground)" }
+                }
+              >
+                {c}
+              </button>
+            ))}
+            <div className="w-px h-4 bg-border mx-1" />
             {(["24h", "7d", "30d"] as Range[]).map((r) => (
               <button
                 key={r}
@@ -198,7 +220,7 @@ export function ObservabilityTab({ cliId }: { cliId: string }) {
               </button>
             ))}
             <button
-              onClick={() => load(range)}
+              onClick={() => load(range, callerFilter)}
               disabled={loading}
               className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 ml-1"
             >
@@ -230,6 +252,56 @@ export function ObservabilityTab({ cliId }: { cliId: string }) {
 
         {data && data.summary.totalInvocations > 0 && (
           <>
+            {/* Caller breakdown */}
+            {(() => {
+              const { human, agent, unknown, agentTypes } = data.callerBreakdown
+              const total = human + agent + unknown
+              if (total === 0) return null
+              const segments: { label: string; value: number; color: string }[] = [
+                { label: "Human", value: human, color: "var(--green)" },
+                { label: "Agent", value: agent, color: "#818cf8" },
+                { label: "Unknown", value: unknown, color: "var(--muted-foreground)" },
+              ].filter((s) => s.value > 0)
+              return (
+                <div className="space-y-2">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Caller breakdown</h4>
+                  {/* Stacked bar */}
+                  <div className="flex h-2 rounded-full overflow-hidden gap-px">
+                    {segments.map((s) => (
+                      <div
+                        key={s.label}
+                        title={`${s.label}: ${s.value} (${((s.value / total) * 100).toFixed(1)}%)`}
+                        style={{ flex: s.value, backgroundColor: s.color }}
+                      />
+                    ))}
+                  </div>
+                  {/* Legend */}
+                  <div className="flex items-center gap-4">
+                    {segments.map((s) => (
+                      <span key={s.label} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                        <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: s.color }} />
+                        {s.label} · {((s.value / total) * 100).toFixed(0)}%
+                      </span>
+                    ))}
+                  </div>
+                  {/* Agent type breakdown — only when agent rows exist */}
+                  {agentTypes.length > 0 && (
+                    <div className="flex items-center gap-2 flex-wrap pt-0.5">
+                      {agentTypes.map(({ type, count }) => (
+                        <span
+                          key={type}
+                          className="text-[10px] px-2 py-0.5 rounded-full font-mono"
+                          style={{ backgroundColor: "rgba(129,140,248,0.1)", color: "#818cf8" }}
+                        >
+                          {type.replace("_", " ")} · {count}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
+
             {/* Summary cards */}
             <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
               <StatCard
@@ -265,16 +337,6 @@ export function ObservabilityTab({ cliId }: { cliId: string }) {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted-foreground">Daily invocations</span>
-                  <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-sm inline-block" style={{ backgroundColor: "var(--green)" }} />
-                      no errors
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-sm inline-block bg-red-400/60" />
-                      has errors
-                    </span>
-                  </div>
                 </div>
                 <Sparkline series={data.dailySeries} height={48} />
                 <div className="flex justify-between text-[10px] text-muted-foreground">
