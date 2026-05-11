@@ -11,9 +11,9 @@ import { randomUUID } from "crypto"
 // insert a clis row with provisioning_status='pending'. The slow GitHub work
 // (build → repo → invite) is fired separately by the client via
 // POST /api/projects/[id]/provision so the user lands in the studio quickly.
-export async function createProject(formData: FormData): Promise<{ id: string }> {
+export async function createProject(formData: FormData): Promise<{ id: string } | { error: string }> {
   const session = await auth()
-  if (!session?.user?.email) throw new Error("Not authenticated")
+  if (!session?.user?.email) return { error: "Not authenticated" }
 
   const supabase = createClient()
   const { data: provider } = await supabase
@@ -23,11 +23,11 @@ export async function createProject(formData: FormData): Promise<{ id: string }>
     .limit(1)
     .single()
 
-  if (!provider) throw new Error("Provider not found")
+  if (!provider) return { error: "Provider not found" }
 
   const projectName = (formData.get("projectName") as string | null)?.trim() ?? ""
   const nameError = validateRepoName(projectName)
-  if (nameError) throw new Error(nameError)
+  if (nameError) return { error: nameError }
 
   const specFile = formData.get("specFile") as File | null
   const specUrl = (formData.get("specUrl") as string | null)?.trim()
@@ -40,13 +40,13 @@ export async function createProject(formData: FormData): Promise<{ id: string }>
     specFilename = specFile.name
   } else if (specUrl) {
     const res = await fetch(specUrl)
-    if (!res.ok) throw new Error(`Failed to fetch spec from URL: ${res.statusText}`)
+    if (!res.ok) return { error: `Failed to fetch spec from URL: ${res.statusText}` }
     specContent = await res.text()
     const urlPath = new URL(specUrl).pathname
     const lastSegment = urlPath.split("/").filter(Boolean).pop() ?? "openapi"
     specFilename = lastSegment.includes(".") ? lastSegment : `${lastSegment}.yaml`
   } else {
-    throw new Error("Please provide a spec file or URL")
+    return { error: "Please provide a spec file or URL" }
   }
 
   // Fail fast on name collisions before anyone leaves the dashboard.
@@ -56,14 +56,19 @@ export async function createProject(formData: FormData): Promise<{ id: string }>
     .eq("name", projectName)
     .limit(1)
   if (nameTakenInDb && nameTakenInDb.length > 0) {
-    throw new Error(`Project name "${projectName}" is already taken`)
+    return { error: `Project name "${projectName}" is already taken` }
   }
   if (await repoExists(projectName)) {
-    throw new Error(`A repo named "${projectName}" already exists in the org`)
+    return { error: `A repo named "${projectName}" already exists in the org` }
   }
 
   // Build IR + default yml. Fast (just parser + template-driven serialization).
-  const previewData = await callPreview(specContent, specFilename)
+  let previewData: Awaited<ReturnType<typeof callPreview>>
+  try {
+    previewData = await callPreview(specContent, specFilename)
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Failed to parse spec" }
+  }
   const configYml = generateYml(previewData.api)
 
   const envPrefix = projectName.replace(/[^a-zA-Z0-9]/g, "_").toUpperCase()
@@ -85,7 +90,7 @@ export async function createProject(formData: FormData): Promise<{ id: string }>
     .select("id")
     .single()
 
-  if (error || !inserted) throw new Error(error?.message ?? "Failed to create project")
+  if (error || !inserted) return { error: error?.message ?? "Failed to create project" }
 
   return { id: inserted.id }
 }

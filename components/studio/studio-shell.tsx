@@ -43,6 +43,7 @@ export function StudioShell({ cli, previewData }: StudioShellProps) {
         <ConfigEditor
           cliId={cli.id}
           cliName={cli.name}
+          specFilename={cli.spec_filename}
           initialConfigYml={cli.config_yml}
           initialSkillNotes={cli.skill_notes}
           llmsText={previewData.llms_text}

@@ -533,6 +533,7 @@ const NAV_ITEMS: { id: Section; label: string; Icon: React.ComponentType<{ class
 type ConfigEditorProps = {
   cliId: string
   cliName: string
+  specFilename: string
   initialConfigYml: string
   initialSkillNotes: string
   llmsText: string
@@ -541,12 +542,21 @@ type ConfigEditorProps = {
   initialFeedbackEnabled: boolean
 }
 
-export function ConfigEditor({ cliId, cliName, initialConfigYml, initialSkillNotes, llmsText, api, initialTelemetryEnabled, initialFeedbackEnabled }: ConfigEditorProps) {
+export function ConfigEditor({ cliId, cliName, specFilename, initialConfigYml, initialSkillNotes, llmsText, api, initialTelemetryEnabled, initialFeedbackEnabled }: ConfigEditorProps) {
   const [config, setConfig] = useState<CliConfig>(() => parseConfig(initialConfigYml))
   const [yamlStr, setYamlStr] = useState(initialConfigYml)
   const [activeSection, setActiveSection] = useState<Section>("cli")
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
   const lastSavedRef = useRef(initialConfigYml)
+
+  // Sync state when the server pushes new props after a spec update + router.refresh().
+  // Client useState doesn't reinitialize on re-render, so we do it explicitly.
+  useEffect(() => {
+    setConfig(parseConfig(initialConfigYml))
+    setYamlStr(initialConfigYml)
+    lastSavedRef.current = initialConfigYml
+    setSaveStatus("idle")
+  }, [initialConfigYml])
 
   // Autosave: debounce yml changes by 800ms, then write to DB.
   useEffect(() => {
@@ -641,6 +651,7 @@ export function ConfigEditor({ cliId, cliName, initialConfigYml, initialSkillNot
         <SettingsTab
           cliId={cliId}
           cliName={cliName}
+          specFilename={specFilename}
           initialTelemetryEnabled={initialTelemetryEnabled}
           initialFeedbackEnabled={initialFeedbackEnabled}
         />

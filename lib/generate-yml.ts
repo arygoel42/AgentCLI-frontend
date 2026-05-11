@@ -36,9 +36,9 @@ function buildAuthBlock(auth: AuthScheme[] | undefined | null): string[] {
   for (const scheme of auth) {
     if (scheme.type === "oauth2") continue
     lines.push(`${indent(1)}${scheme.id}:`)
-    if (scheme.type === "http") {
+    if (scheme.type === "http" || scheme.type === "http-bearer" || scheme.type === "http-basic") {
       lines.push(`${indent(2)}type: http`)
-      lines.push(`${indent(2)}scheme: ${scheme.scheme ?? "bearer"}`)
+      lines.push(`${indent(2)}scheme: ${scheme.scheme ?? (scheme.type === "http-basic" ? "basic" : "bearer")}`)
     } else if (scheme.type === "apiKey") {
       lines.push(`${indent(2)}type: apiKey`)
       lines.push(`${indent(2)}in: ${scheme.in ?? "header"}`)

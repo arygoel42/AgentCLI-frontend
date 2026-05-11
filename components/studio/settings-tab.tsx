@@ -1,10 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { Activity, MessageSquare, Loader2, Trash2 } from "lucide-react"
-import { saveDataSettings, deleteProject } from "@/app/dashboard/projects/[id]/actions"
+import { Activity, FileCode2, Link2, Loader2, MessageSquare, Trash2, Upload } from "lucide-react"
+import { saveDataSettings, deleteProject, updateSpec } from "@/app/dashboard/projects/[id]/actions"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,6 +16,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
 
 function Toggle({
   enabled,
@@ -40,14 +48,120 @@ function Toggle({
   )
 }
 
+function UpdateSpecSheet({ cliId, specFilename }: { cliId: string; specFilename: string }) {
+  const router = useRouter()
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [open, setOpen] = useState(false)
+  const [specUrl, setSpecUrl] = useState("")
+  const [fileName, setFileName] = useState<string | null>(null)
+  const [pending, setPending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const canSubmit = specUrl.trim().length > 0 || fileName !== null
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file) { setFileName(file.name); setSpecUrl("") }
+  }
+
+  async function handleSubmit() {
+    if (!canSubmit || pending) return
+    setPending(true)
+    setError(null)
+    const fd = new FormData()
+    const file = fileRef.current?.files?.[0]
+    if (file) {
+      fd.append("specFile", file)
+    } else if (specUrl.trim()) {
+      fd.append("specUrl", specUrl.trim())
+    }
+    try {
+      await updateSpec(cliId, fd)
+      toast.success("Spec updated — resources and auth refreshed from new spec")
+      setOpen(false)
+      router.refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update spec")
+    } finally {
+      setPending(false)
+    }
+  }
+
+  function handleOpenChange(next: boolean) {
+    if (!next) { setSpecUrl(""); setFileName(null); setError(null) }
+    setOpen(next)
+  }
+
+  return (
+    <Sheet open={open} onOpenChange={handleOpenChange}>
+      <SheetTrigger asChild>
+        <button className="text-xs px-3 py-1.5 rounded-md border border-border hover:bg-muted transition-colors">
+          Update spec
+        </button>
+      </SheetTrigger>
+      <SheetContent side="right" className="w-full sm:max-w-md flex flex-col gap-0 p-0">
+        <SheetHeader className="px-6 py-5 border-b border-border">
+          <SheetTitle className="text-sm">Update OpenAPI spec</SheetTitle>
+          <SheetDescription className="text-xs">
+            Resources, auth, and base URL will be replaced from the new spec.
+            Your CLI name, version, and custom environments are preserved.
+          </SheetDescription>
+        </SheetHeader>
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+          <div className="relative">
+            <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="url"
+              value={specUrl}
+              onChange={(e) => { setSpecUrl(e.target.value); setFileName(null) }}
+              placeholder="https://api.example.com/openapi.json"
+              disabled={pending}
+              className="w-full rounded-md border border-border bg-background pl-9 pr-3 py-2 text-sm outline-none focus:border-foreground/40 disabled:opacity-50"
+            />
+          </div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <div className="h-px flex-1 bg-border" />
+            <span>OR</span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+          <label className={`flex items-center justify-center gap-2 w-full rounded-md border border-dashed border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors ${pending ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}>
+            <Upload className="w-4 h-4" />
+            {fileName ?? "Upload a .json or .yaml file"}
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".json,.yaml,.yml"
+              onChange={handleFileSelect}
+              className="hidden"
+              disabled={pending}
+            />
+          </label>
+          {error && <p className="text-xs text-red-500">{error}</p>}
+        </div>
+        <div className="px-6 py-4 border-t border-border">
+          <button
+            onClick={handleSubmit}
+            disabled={!canSubmit || pending}
+            className="flex items-center justify-center gap-2 w-full rounded-md py-2 text-sm font-medium transition-colors disabled:opacity-50"
+            style={{ backgroundColor: "var(--green)", color: "#000" }}
+          >
+            {pending ? <><Loader2 className="w-4 h-4 animate-spin" /> Updating…</> : "Update spec"}
+          </button>
+        </div>
+      </SheetContent>
+    </Sheet>
+  )
+}
+
 type SettingsTabProps = {
   cliId: string
   cliName: string
+  specFilename: string
   initialTelemetryEnabled: boolean
   initialFeedbackEnabled: boolean
 }
 
-export function SettingsTab({ cliId, cliName, initialTelemetryEnabled, initialFeedbackEnabled }: SettingsTabProps) {
+export function SettingsTab({ cliId, cliName, specFilename, initialTelemetryEnabled, initialFeedbackEnabled }: SettingsTabProps) {
   const router = useRouter()
   const [telemetryEnabled, setTelemetryEnabled] = useState(initialTelemetryEnabled)
   const [feedbackEnabled, setFeedbackEnabled] = useState(initialFeedbackEnabled)
@@ -84,6 +198,18 @@ export function SettingsTab({ cliId, cliName, initialTelemetryEnabled, initialFe
   return (
     <div className="flex-1 min-w-0 overflow-y-auto">
       <div className="p-6 space-y-8">
+        <div>
+          <h3 className="text-sm font-semibold">OpenAPI Spec</h3>
+          <p className="text-xs text-muted-foreground mt-1 mb-4">
+            Replace the spec to regenerate resources and auth. Your CLI name, version, and custom environments are preserved.
+          </p>
+          <div className="flex items-center gap-3 rounded-xl border border-border bg-secondary/10 p-4">
+            <FileCode2 className="w-4 h-4 text-muted-foreground shrink-0" />
+            <code className="text-xs font-mono flex-1 truncate">{specFilename}</code>
+            <UpdateSpecSheet cliId={cliId} specFilename={specFilename} />
+          </div>
+        </div>
+
         <div>
           <h3 className="text-sm font-semibold">Data collection</h3>
           <p className="text-xs text-muted-foreground mt-1">

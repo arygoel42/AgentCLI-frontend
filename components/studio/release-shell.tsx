@@ -544,12 +544,7 @@ export function ReleaseShell({
                   )}
                 </div>
 
-                <button
-                  onClick={() => router.push(`/dashboard/projects/${cliId}`)}
-                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  ← Back to studio to bump version for next release
-                </button>
+              
               </div>
             )}
 
