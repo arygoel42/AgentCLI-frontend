@@ -47,6 +47,13 @@ describe("generateNpmPackage", () => {
       expect(p.name).toBe("@myorg/mycli")
     })
 
+    it("uses a custom package name when provided, keeping cliName as the bin entry", () => {
+      const custom = generateNpmPackage("stripe", "o", "r", "1.0.0", "@petl-cli", "acme-stripe-cli")
+      const p = JSON.parse(custom.get("npm/package.json")!)
+      expect(p.name).toBe("@petl-cli/acme-stripe-cli")
+      expect(p.bin).toEqual({ stripe: "bin/run.js" })
+    })
+
     it("sets the version", () => {
       expect(pkg.version).toBe("1.2.3")
     })

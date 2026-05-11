@@ -211,7 +211,11 @@ export async function POST(
     const installScript = generateInstallScript(cliName, repoOwner, repoName)
     files.set("install.sh", Buffer.from(installScript, "utf-8"))
 
-    const npmFiles = generateNpmPackage(cliName, repoOwner, repoName, version)
+    // Use repoName (= project name) as the npm package name so the published
+    // package inherits the uniqueness check we already enforce on repo names.
+    // The bin/command name inside the package stays cliName. Scope tracks the
+    // bot org so npm and GitHub identifiers stay aligned.
+    const npmFiles = generateNpmPackage(cliName, repoOwner, repoName, version, `@${repoOwner}`, repoName)
     for (const [path, content] of npmFiles) {
       files.set(path, Buffer.from(content, "utf-8"))
     }

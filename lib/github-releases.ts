@@ -190,16 +190,21 @@ echo "\${CLI_NAME} installed to \${INSTALL_DIR}/\${CLI_NAME}"
 // Generates the three files needed for an npm wrapper package under npm/ in the repo.
 // The postinstall script downloads the correct binary from the GitHub release at install
 // time; bin/run.js is a thin shim that execs the binary and forwards all args + exit code.
+// packageName controls the npm package name (under `scope`); defaults to cliName
+// for backwards compat. Pass the repo/project name here so the npm package gets
+// the same uniqueness guarantee the platform already enforces on repo names.
+// The bin entry — i.e. the command users type — always stays cliName.
 export function generateNpmPackage(
   cliName: string,
   owner: string,
   repo: string,
   version: string,
   scope: string = "@petl-cli",
+  packageName: string = cliName,
 ): Map<string, string> {
   const packageJson = JSON.stringify(
     {
-      name: `${scope}/${cliName}`,
+      name: `${scope}/${packageName}`,
       version,
       description: `Generated CLI — ${cliName}`,
       bin: { [cliName]: "bin/run.js" },

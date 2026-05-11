@@ -235,7 +235,8 @@ export function ReleaseShell({
       ? `curl -fsSL https://github.com/${repoOwner}/${repoName}/releases/latest/download/install.sh | sh`
       : null
 
-  const npmInstallCmd = repoOwner ? `npm install -g @${repoOwner}/${cliName}` : null
+  // Package name = repoName (project name) for uniqueness; bin/command stays cliName.
+  const npmInstallCmd = repoOwner && repoName ? `npm install -g @${repoOwner}/${repoName}` : null
 
   const historyEntries =
     latestReleaseVersion
