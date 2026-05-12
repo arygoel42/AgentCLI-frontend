@@ -4,8 +4,10 @@ import { useState, useRef, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import {
   ArrowLeft, Github, ExternalLink, Copy, Check,
-  Loader2, RefreshCw, Package, AlertCircle, Terminal, Box, CheckCircle2,
+  Loader2, RefreshCw, Package, AlertCircle, Terminal, Box, CheckCircle2, FileText,
 } from "lucide-react"
+import { setDocsPublished } from "@/app/dashboard/projects/[id]/actions"
+import { slugify } from "@/lib/docs-render"
 
 type ReleaseStatus = "idle" | "in_progress" | "completed" | "failed"
 
@@ -31,6 +33,7 @@ type ReleaseShellProps = {
   provisioningStatus: string
   repoOwner: string | null
   repoName: string | null
+  initialDocsPublished: boolean
 }
 
 const PLATFORMS = [
@@ -87,6 +90,44 @@ function CodeBlock({ code }: { code: string }) {
         {code}
       </code>
       <CopyButton text={code} />
+    </div>
+  )
+}
+
+function DocsPublishCard({
+  docsUrl,
+  published,
+  onToggle,
+}: {
+  docsUrl: string
+  published: boolean
+  onToggle: (next: boolean) => Promise<void> | void
+}) {
+  return (
+    <div className="space-y-2">
+      <p className="text-xs font-medium flex items-center gap-1.5">
+        <FileText className="w-3.5 h-3.5 text-muted-foreground" />
+        User docs
+      </p>
+      <div className="rounded-md border border-border p-3 space-y-2">
+        <div className="flex items-center justify-between gap-3">
+          <code className="flex-1 text-[11px] font-mono text-foreground truncate">{docsUrl}</code>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {published && <CopyButton text={docsUrl} />}
+            <button
+              onClick={() => onToggle(!published)}
+              className="text-[11px] px-2 py-1 rounded border border-border hover:bg-muted transition-colors"
+            >
+              {published ? "Unpublish" : "Publish"}
+            </button>
+          </div>
+        </div>
+        <p className="text-[10px] text-muted-foreground">
+          {published
+            ? "Live. Anyone with the link can read these docs."
+            : "Auto-generated from your spec. Publish to share with end users."}
+        </p>
+      </div>
     </div>
   )
 }
@@ -184,8 +225,13 @@ export function ReleaseShell({
   provisioningStatus,
   repoOwner,
   repoName,
+  initialDocsPublished,
 }: ReleaseShellProps) {
   const router = useRouter()
+  const [docsPublished, setDocsPublishedState] = useState(initialDocsPublished)
+  const docsSlug = slugify(cliName)
+  const docsUrl =
+    typeof window !== "undefined" ? `${window.location.origin}/docs/${docsSlug}` : `/docs/${docsSlug}`
 
   const [status, setStatus]         = useState<ReleaseStatus>(computeInitialStatus(initialReleaseStatus))
   const [error, setError]           = useState<string | null>(initialReleaseError)
@@ -519,6 +565,20 @@ export function ReleaseShell({
                       </p>
                     </div>
                   )}
+
+                  <DocsPublishCard
+                    docsUrl={docsUrl}
+                    published={docsPublished}
+                    onToggle={async (next) => {
+                      setDocsPublishedState(next)
+                      try {
+                        await setDocsPublished(cliId, next)
+                      } catch (err) {
+                        console.error("[docs publish] failed:", err)
+                        setDocsPublishedState(!next)
+                      }
+                    }}
+                  />
 
                   {downloadBase && (
                     <div className="space-y-2">

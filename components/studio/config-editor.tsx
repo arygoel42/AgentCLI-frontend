@@ -4,21 +4,22 @@ import { useState, useCallback, useEffect, useRef } from "react"
 import { toast } from "sonner"
 import {
   Terminal, Globe, Lock, FolderTree, BookOpen, MessageSquare, BarChart2,
-  Save, Plus, Trash2, GripVertical, ChevronRight, X, Info, Settings,
+  Save, Plus, Trash2, GripVertical, ChevronRight, X, Info, Settings, FileText,
 } from "lucide-react"
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
 import { YamlPanel } from "./yaml-panel"
 import { AgentDocsTab } from "./agent-docs-tab"
+import { DocsTab } from "./docs-tab"
 import { FeedbackTab } from "./feedback-tab"
 import { ObservabilityTab } from "./observability-tab"
 import { SettingsTab } from "./settings-tab"
 import { parseConfig, serializeConfig, type CliConfig, type ResourceNode } from "@/lib/parse-yml"
 import { saveConfig } from "@/app/dashboard/projects/[id]/actions"
-import type { PreviewApi, Command as ApiCommand } from "@/lib/engine"
+import type { PreviewApi, Command as ApiCommand, UserDocs } from "@/lib/engine"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Section = "cli" | "environments" | "security" | "resources" | "agent-docs" | "feedback" | "observability" | "settings"
+type Section = "cli" | "environments" | "security" | "resources" | "agent-docs" | "docs" | "feedback" | "observability" | "settings"
 
 const SECTION_YAML_KEY: Record<string, string> = {
   cli: "cli",
@@ -525,6 +526,7 @@ const NAV_ITEMS: { id: Section; label: string; Icon: React.ComponentType<{ class
   { id: "security",       label: "Security",       Icon: Lock },
   { id: "resources",      label: "Resources",      Icon: FolderTree },
   { id: "agent-docs",     label: "llms.txt",       Icon: BookOpen },
+  { id: "docs",           label: "Docs",           Icon: FileText },
   { id: "feedback",       label: "Feedback",       Icon: MessageSquare },
   { id: "observability",  label: "Observability",  Icon: BarChart2 },
   { id: "settings",       label: "Settings",       Icon: Settings },
@@ -538,11 +540,16 @@ type ConfigEditorProps = {
   initialSkillNotes: string
   llmsText: string
   api: PreviewApi
+  userDocs: UserDocs
+  initialDocsMd: string
+  docsPublished: boolean
+  repoOwner: string | null
+  repoName: string | null
   initialTelemetryEnabled: boolean
   initialFeedbackEnabled: boolean
 }
 
-export function ConfigEditor({ cliId, cliName, specFilename, initialConfigYml, initialSkillNotes, llmsText, api, initialTelemetryEnabled, initialFeedbackEnabled }: ConfigEditorProps) {
+export function ConfigEditor({ cliId, cliName, specFilename, initialConfigYml, initialSkillNotes, llmsText, api, userDocs, initialDocsMd, docsPublished, repoOwner, repoName, initialTelemetryEnabled, initialFeedbackEnabled }: ConfigEditorProps) {
   const [config, setConfig] = useState<CliConfig>(() => parseConfig(initialConfigYml))
   const [yamlStr, setYamlStr] = useState(initialConfigYml)
   const [activeSection, setActiveSection] = useState<Section>("cli")
@@ -587,7 +594,10 @@ export function ConfigEditor({ cliId, cliName, specFilename, initialConfigYml, i
     if (Object.keys(parsed).length > 0) setConfig(parsed)
   }
 
-  const yamlHighlightKey = activeSection !== "agent-docs" ? (SECTION_YAML_KEY[activeSection] ?? null) : null
+  const yamlHighlightKey =
+    activeSection !== "agent-docs" && activeSection !== "docs"
+      ? (SECTION_YAML_KEY[activeSection] ?? null)
+      : null
 
   return (
     <div className="flex h-full overflow-hidden">
@@ -642,6 +652,16 @@ export function ConfigEditor({ cliId, cliName, specFilename, initialConfigYml, i
           cliId={cliId}
           initialNotes={initialSkillNotes}
           llmsText={llmsText}
+        />
+      ) : activeSection === "docs" ? (
+        <DocsTab
+          cliId={cliId}
+          cliName={cliName}
+          initialDocsMd={initialDocsMd}
+          userDocs={userDocs}
+          repoOwner={repoOwner}
+          repoName={repoName}
+          docsPublished={docsPublished}
         />
       ) : activeSection === "feedback" ? (
         <FeedbackTab cliId={cliId} cliName={cliName} />

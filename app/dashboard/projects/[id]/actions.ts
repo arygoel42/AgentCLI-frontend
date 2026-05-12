@@ -47,6 +47,28 @@ export async function saveConfig(cliId: string, configYml: string): Promise<void
   if (error) throw new Error(error.message)
 }
 
+export async function saveDocsMd(cliId: string, md: string): Promise<void> {
+  const { supabase } = await getOwnedCli(cliId)
+
+  const { error } = await supabase
+    .from("clis")
+    .update({ docs_md: md })
+    .eq("id", cliId)
+
+  if (error) throw new Error(error.message)
+}
+
+export async function setDocsPublished(cliId: string, published: boolean): Promise<void> {
+  const { supabase } = await getOwnedCli(cliId)
+
+  const { error } = await supabase
+    .from("clis")
+    .update({ docs_published: published })
+    .eq("id", cliId)
+
+  if (error) throw new Error(error.message)
+}
+
 export async function saveSkillNotes(cliId: string, notes: string): Promise<void> {
   const { supabase } = await getOwnedCli(cliId)
 

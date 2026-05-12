@@ -60,6 +60,57 @@ export type PreviewApi = {
   groups: CommandGroup[]
 }
 
+export type UserDocsAuth = {
+  id: string
+  type: string
+  env_var: string
+  hint: string
+}
+
+export type UserDocsParameter = {
+  name: string
+  type: string
+  location: string
+  required: boolean
+  description: string
+  enum: string[]
+}
+
+export type UserDocsCommand = {
+  name: string
+  description: string
+  http_method: string
+  path: string
+  sample: string
+  parameters: UserDocsParameter[]
+}
+
+export type UserDocsGroup = {
+  name: string
+  description: string
+  commands: UserDocsCommand[]
+}
+
+export type UserDocsDemoLine = {
+  type: "comment" | "input" | "output"
+  text: string
+  delay?: number
+}
+
+// UserDocs is the engine-rendered, deterministic docs model. Same spec +
+// config always produces the same shape; the studio's Docs tab merges in
+// per-section markdown overrides from the provider at render time.
+export type UserDocs = {
+  cli_name: string
+  version: string
+  description: string
+  base_url: string
+  env_prefix: string
+  auth: UserDocsAuth[]
+  groups: UserDocsGroup[]
+  demo_script: UserDocsDemoLine[]
+}
+
 export type PreviewResponse = {
   api: PreviewApi
   warnings: string[]
@@ -67,6 +118,9 @@ export type PreviewResponse = {
   // that ships at the repo root and is embedded in the binary via
   // agent-instructions. The studio shows it read-only above the notes editor.
   llms_text: string
+  // user_docs is the structured docs model rendered for the end-user docs
+  // site at /docs/<slug>. Always regenerated from the spec on preview.
+  user_docs: UserDocs
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -126,6 +180,65 @@ function normalizeResponse(raw: any): PreviewResponse {
     },
     warnings: raw.warnings ?? raw.Warnings ?? [],
     llms_text: typeof raw.llms_text === "string" ? raw.llms_text : "",
+    user_docs: normalizeUserDocs(raw.user_docs),
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function normalizeUserDocs(raw: any): UserDocs {
+  if (!raw || typeof raw !== "object") {
+    return {
+      cli_name: "",
+      version: "",
+      description: "",
+      base_url: "",
+      env_prefix: "",
+      auth: [],
+      groups: [],
+      demo_script: [],
+    }
+  }
+  return {
+    cli_name: raw.cli_name ?? "",
+    version: raw.version ?? "",
+    description: raw.description ?? "",
+    base_url: raw.base_url ?? "",
+    env_prefix: raw.env_prefix ?? "",
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    auth: (raw.auth ?? []).map((a: any) => ({
+      id: a.id ?? "",
+      type: a.type ?? "",
+      env_var: a.env_var ?? "",
+      hint: a.hint ?? "",
+    })),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    groups: (raw.groups ?? []).map((g: any) => ({
+      name: g.name ?? "",
+      description: g.description ?? "",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      commands: (g.commands ?? []).map((c: any) => ({
+        name: c.name ?? "",
+        description: c.description ?? "",
+        http_method: c.http_method ?? "",
+        path: c.path ?? "",
+        sample: c.sample ?? "",
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        parameters: (c.parameters ?? []).map((p: any) => ({
+          name: p.name ?? "",
+          type: p.type ?? "",
+          location: p.location ?? "",
+          required: p.required ?? false,
+          description: p.description ?? "",
+          enum: p.enum ?? [],
+        })),
+      })),
+    })),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    demo_script: (raw.demo_script ?? []).map((l: any) => ({
+      type: (l.type ?? "output") as "comment" | "input" | "output",
+      text: l.text ?? "",
+      delay: l.delay,
+    })),
   }
 }
 

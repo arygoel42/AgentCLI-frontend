@@ -62,6 +62,14 @@ export const clis = pgTable("clis", {
   homebrewFormulaUrl: text("homebrew_formula_url"),
   buildsSinceRelease: integer("builds_since_release").default(0).notNull(),
   lastBuildAt: timestamp("last_build_at", { withTimezone: true }),
+  // User docs — provider-authored markdown that augments the auto-generated
+  // /docs/<slug> site. Auto sections (groups, commands, params) always come
+  // from the live spec; docs_md is the intro/quickstart/notes the provider
+  // writes themselves. Empty = use the auto-rendered fallback only.
+  // ALTER TABLE clis ADD COLUMN IF NOT EXISTS docs_md TEXT NOT NULL DEFAULT '';
+  // ALTER TABLE clis ADD COLUMN IF NOT EXISTS docs_published BOOLEAN NOT NULL DEFAULT false;
+  docsMd: text("docs_md").default("").notNull(),
+  docsPublished: boolean("docs_published").default(false).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   telemetryEnabled: boolean("telemetry_enabled").default(true).notNull(),
   feedbackEnabled: boolean("feedback_enabled").default(true).notNull(),

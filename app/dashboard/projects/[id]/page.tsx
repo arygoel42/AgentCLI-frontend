@@ -28,7 +28,7 @@ export default async function ProjectPage({
   const { data: cli } = await supabase
     .from("clis")
     .select(
-      "id, name, provider_id, config_yml, spec_content, spec_filename, preview_json, skill_notes, repo_url, repo_owner, repo_name, invite_sent_at, invite_accepted_at, provisioning_status, latest_release_version, telemetry_enabled, feedback_enabled"
+      "id, name, provider_id, config_yml, spec_content, spec_filename, preview_json, skill_notes, docs_md, docs_published, repo_url, repo_owner, repo_name, invite_sent_at, invite_accepted_at, provisioning_status, latest_release_version, telemetry_enabled, feedback_enabled"
     )
     .eq("id", id)
     .single()
@@ -44,9 +44,14 @@ export default async function ProjectPage({
     }
   }
 
-  // Backfill: previews stored before the engine started returning llms_text
-  // will lack it. Re-render once and persist so subsequent loads are cheap.
-  if (previewData && !previewData.llms_text && cli.spec_content) {
+  // Backfill: previews stored before the engine started returning llms_text or
+  // user_docs will lack them. Re-render once and persist so subsequent loads
+  // are cheap.
+  const needsBackfill =
+    previewData && cli.spec_content &&
+    (!previewData.llms_text || !previewData.user_docs?.groups)
+
+  if (needsBackfill) {
     try {
       const refreshed = await callPreview(cli.spec_content, cli.spec_filename ?? "openapi.yaml", cli.config_yml ?? undefined)
       previewData = refreshed
@@ -79,6 +84,8 @@ export default async function ProjectPage({
         spec_content: cli.spec_content ?? "",
         spec_filename: cli.spec_filename ?? "openapi.yaml",
         skill_notes: (cli.skill_notes ?? "") as string,
+        docs_md: (cli.docs_md ?? "") as string,
+        docs_published: (cli.docs_published ?? false) as boolean,
         provisioning_status: (cli.provisioning_status ?? "pending") as "pending" | "in_progress" | "completed" | "failed",
         repo_url: cli.repo_url ?? null,
         repo_owner: cli.repo_owner ?? null,

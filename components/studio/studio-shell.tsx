@@ -12,6 +12,8 @@ type StudioShellProps = {
     spec_content: string
     spec_filename: string
     skill_notes: string
+    docs_md: string
+    docs_published: boolean
     provisioning_status: "pending" | "in_progress" | "completed" | "failed"
     repo_url?: string | null
     repo_owner?: string | null
@@ -48,6 +50,11 @@ export function StudioShell({ cli, previewData }: StudioShellProps) {
           initialSkillNotes={cli.skill_notes}
           llmsText={previewData.llms_text}
           api={previewData.api}
+          userDocs={previewData.user_docs}
+          initialDocsMd={cli.docs_md}
+          docsPublished={cli.docs_published}
+          repoOwner={cli.repo_owner ?? null}
+          repoName={cli.repo_name ?? null}
           initialTelemetryEnabled={cli.telemetry_enabled}
           initialFeedbackEnabled={cli.feedback_enabled}
         />

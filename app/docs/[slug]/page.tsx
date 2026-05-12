@@ -1,0 +1,99 @@
+import { notFound } from "next/navigation"
+import Link from "next/link"
+import { Flower, ArrowRight } from "lucide-react"
+import { createClient } from "@/utils/supabase/server"
+import { callPreview, type PreviewResponse } from "@/lib/engine"
+import { DocsPreview } from "@/components/docs/docs-preview"
+import { buildDocsViewModel, slugify } from "@/lib/docs-render"
+
+// Per-CLI end-user docs. Looked up by slug derived from the CLI's name.
+// Only renders when the provider has flipped docs_published = true.
+//
+// Auto sections (auth, groups, commands) regenerate from the spec via the
+// engine's /preview endpoint, then merge with the provider's intro markdown
+// stored in clis.docs_md.
+
+export const dynamic = "force-dynamic"
+
+export default async function ProjectDocsPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}) {
+  const { slug } = await params
+  const supabase = createClient()
+
+  // Slug isn't a stable column today — derive it on lookup. Names are kebab
+  // already in most cases, so an exact-match check after slugify works for
+  // the common path.
+  const { data: candidates } = await supabase
+    .from("clis")
+    .select("id, name, spec_content, spec_filename, config_yml, docs_md, docs_published, repo_owner, repo_name, preview_json, latest_release_version")
+
+  const cli = (candidates ?? []).find((c) => slugify(c.name) === slug)
+  if (!cli || !cli.docs_published) notFound()
+
+  let previewData: PreviewResponse | null = null
+  if (cli.preview_json) {
+    try {
+      previewData = JSON.parse(cli.preview_json) as PreviewResponse
+    } catch {
+      // fall through
+    }
+  }
+
+  // If the cached preview is missing user_docs (older row), refresh.
+  if ((!previewData || !previewData.user_docs?.groups) && cli.spec_content) {
+    try {
+      previewData = await callPreview(
+        cli.spec_content,
+        cli.spec_filename ?? "openapi.yaml",
+        cli.config_yml ?? undefined
+      )
+    } catch (err) {
+      console.error("[/docs/[slug]] preview refresh failed:", err)
+    }
+  }
+
+  if (!previewData) notFound()
+
+  const viewModel = buildDocsViewModel({
+    userDocs: previewData.user_docs,
+    docsMd: cli.docs_md ?? "",
+    cliName: cli.name,
+    repoOwner: cli.repo_owner ?? null,
+    repoName: cli.repo_name ?? null,
+    origin: null,
+    slug,
+  })
+
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur">
+        <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-1.5">
+            <Flower className="w-4 h-4" style={{ color: "var(--green)" }} />
+            <span className="font-bold tracking-tight text-lg">
+              pe<span style={{ color: "var(--green)" }}>t</span>l
+            </span>
+          </Link>
+          <nav className="flex items-center gap-6 text-sm text-muted-foreground">
+            <span className="text-foreground font-medium">{cli.name}</span>
+            <Link href="/docs" className="hover:text-foreground transition-colors">Platform docs</Link>
+            <Link
+              href="/"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition-colors"
+              style={{ backgroundColor: "var(--green)", color: "#000" }}
+            >
+              Built with petl <ArrowRight className="w-3 h-3" />
+            </Link>
+          </nav>
+        </div>
+      </header>
+
+      <main className="max-w-5xl mx-auto">
+        <DocsPreview viewModel={viewModel} />
+      </main>
+    </div>
+  )
+}

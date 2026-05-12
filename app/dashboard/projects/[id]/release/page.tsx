@@ -30,7 +30,7 @@ export default async function ReleasePage({
   const { data: cli } = await supabase
     .from("clis")
     .select(
-      "id, name, provider_id, config_yml, provisioning_status, repo_owner, repo_name, release_status, release_error, latest_release_version, latest_release_url, latest_release_at, builds_since_release, homebrew_formula_url"
+      "id, name, provider_id, config_yml, provisioning_status, repo_owner, repo_name, release_status, release_error, latest_release_version, latest_release_url, latest_release_at, builds_since_release, homebrew_formula_url, docs_published"
     )
     .eq("id", id)
     .single()
@@ -68,6 +68,7 @@ export default async function ReleasePage({
       provisioningStatus={cli.provisioning_status ?? "pending"}
       repoOwner={cli.repo_owner ?? null}
       repoName={cli.repo_name ?? null}
+      initialDocsPublished={cli.docs_published ?? false}
     />
   )
 }
