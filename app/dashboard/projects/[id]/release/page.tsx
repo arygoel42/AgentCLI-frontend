@@ -58,7 +58,6 @@ export default async function ReleasePage({
     <ReleaseShell
       cliId={cli.id}
       cliName={cliName}
-      docsName={cli.name}
       version={version}
       latestReleaseVersion={cli.latest_release_version ?? null}
       latestReleaseUrl={cli.latest_release_url ?? null}
@@ -69,7 +68,6 @@ export default async function ReleasePage({
       provisioningStatus={cli.provisioning_status ?? "pending"}
       repoOwner={cli.repo_owner ?? null}
       repoName={cli.repo_name ?? null}
-      initialDocsPublished={cli.docs_published ?? false}
     />
   )
 }

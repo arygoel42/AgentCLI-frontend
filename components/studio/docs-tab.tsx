@@ -5,7 +5,7 @@ import { toast } from "sonner"
 import { ExternalLink, FileText, Save, RotateCcw } from "lucide-react"
 import Link from "next/link"
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
-import { saveDocsMd } from "@/app/dashboard/projects/[id]/actions"
+import { saveDocsMd, setDocsPublished } from "@/app/dashboard/projects/[id]/actions"
 import { DocsPreview } from "@/components/docs/docs-preview"
 import {
   buildDocsViewModel,
@@ -51,7 +51,24 @@ export function DocsTab({
   const [overrides, setOverrides] = useState<DocsOverrides>(() => parseDocsMd(initialDocsMd))
   const [activeSection, setActiveSection] = useState<DocsSectionId>("intro_md")
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
+  const [published, setPublished] = useState(docsPublished)
+  const [publishBusy, setPublishBusy] = useState(false)
   const lastSavedRef = useRef(initialDocsMd)
+
+  async function togglePublished() {
+    const next = !published
+    setPublishBusy(true)
+    setPublished(next)
+    try {
+      await setDocsPublished(cliId, next)
+    } catch (err) {
+      console.error("[docs publish] failed:", err)
+      setPublished(!next)
+      toast.error(err instanceof Error ? err.message : "Failed to update docs visibility")
+    } finally {
+      setPublishBusy(false)
+    }
+  }
 
   useEffect(() => {
     const serialized = serializeOverrides(overrides)
@@ -110,7 +127,7 @@ export function DocsTab({
           </p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          {docsPublished && (
+          {published && (
             <Link
               href={publicHref}
               target="_blank"
@@ -120,6 +137,14 @@ export function DocsTab({
               {publicHref}
             </Link>
           )}
+          <button
+            onClick={togglePublished}
+            disabled={publishBusy}
+            className="text-[11px] px-2.5 py-1 rounded border border-border hover:bg-muted transition-colors disabled:opacity-50"
+            title={published ? "Take the public docs site offline" : "Make the docs site visible at the public URL"}
+          >
+            {published ? "Unpublish" : "Publish"}
+          </button>
           <div className="text-[11px] text-muted-foreground">
             {saveStatus === "saving" && (
               <span className="flex items-center gap-1.5">
