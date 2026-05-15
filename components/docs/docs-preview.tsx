@@ -2,32 +2,27 @@
 
 import { useMemo, useState } from "react"
 import { CodeBlock } from "@/components/docs/code-block"
+import { CopyMarkdown } from "@/components/docs/copy-markdown"
 import { resolveSection, type DocsViewModel } from "@/lib/docs-render"
 import type { UserDocsCommand, UserDocsGroup } from "@/lib/engine"
-import {
-  ChevronDown,
-  Command,
-  KeyRound,
-  Layers3,
-  Route,
-  Search,
-  Terminal,
-} from "lucide-react"
+import { ChevronDown, Search } from "lucide-react"
 
 type DocsPreviewProps = {
   viewModel: DocsViewModel
   // compact mode is used inside the studio tab — tighter padding, narrower
   // max-width, no top-level header bar (the tab provides its own).
   compact?: boolean
+  // rawMarkdownUrl enables the "Copy markdown / View .md" affordance.
+  // Omitted in studio preview (no published URL yet); set on the public page.
+  rawMarkdownUrl?: string
 }
 
-export function DocsPreview({ viewModel, compact = false }: DocsPreviewProps) {
+export function DocsPreview({ viewModel, compact = false, rawMarkdownUrl }: DocsPreviewProps) {
   const { userDocs, install } = viewModel
   const [commandFilter, setCommandFilter] = useState("")
   const containerPad = compact ? "px-6 py-6" : "px-4 sm:px-8 py-12"
   const maxW = compact ? "max-w-3xl" : "max-w-4xl"
   const cliName = userDocs.cli_name || "CLI"
-  const commandCount = countCommands(userDocs.groups)
   const filteredGroups = useMemo(
     () => filterGroups(userDocs.groups, commandFilter),
     [userDocs.groups, commandFilter]
@@ -36,31 +31,23 @@ export function DocsPreview({ viewModel, compact = false }: DocsPreviewProps) {
   return (
     <div className={`${containerPad} ${maxW} mx-auto space-y-14`}>
       <section className={compact ? "space-y-5" : "space-y-6 border-b border-border pb-10"}>
-        <div className="inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-          <Terminal className="h-3.5 w-3.5" />
-          End-user CLI docs
-        </div>
         <div className="space-y-3">
-          <div className="flex items-baseline gap-3 flex-wrap">
-            <h1 className={compact ? "text-2xl font-bold tracking-tight" : "text-4xl font-bold tracking-tight"}>
-              {cliName}
-            </h1>
-            {userDocs.version && (
-              <span className="font-mono text-xs text-muted-foreground">v{userDocs.version}</span>
-            )}
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div className="flex items-baseline gap-3 flex-wrap">
+              <h1 className={compact ? "text-2xl font-bold tracking-tight" : "text-4xl font-bold tracking-tight"}>
+                {cliName}
+              </h1>
+              {userDocs.version && (
+                <span className="font-mono text-xs text-muted-foreground">v{userDocs.version}</span>
+              )}
+            </div>
+            {rawMarkdownUrl && <CopyMarkdown rawUrl={rawMarkdownUrl} />}
           </div>
           <Markdown
             paragraphClassName={compact ? undefined : "text-base text-muted-foreground leading-7 max-w-2xl"}
           >
             {resolveSection(viewModel, "intro_md")}
           </Markdown>
-        </div>
-
-        <div className={compact ? "grid grid-cols-2 gap-x-6 gap-y-3" : "grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-3 pt-2"}>
-          <Fact icon={Command} label="Commands" value={String(commandCount)} />
-          <Fact icon={Layers3} label="Groups" value={String(userDocs.groups.length)} />
-          <Fact icon={KeyRound} label="Auth" value={userDocs.auth.length > 0 ? `${userDocs.auth.length} scheme${userDocs.auth.length === 1 ? "" : "s"}` : "None"} />
-          <Fact icon={Route} label="Base URL" value={userDocs.base_url || "From spec"} />
         </div>
       </section>
 
@@ -139,26 +126,6 @@ function Section({ title, children }: { title?: string; children: React.ReactNod
       {title && <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{title}</h2>}
       {children}
     </section>
-  )
-}
-
-function Fact({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: React.ComponentType<{ className?: string }>
-  label: string
-  value: string
-}) {
-  return (
-    <div className="min-w-0">
-      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
-        <Icon className="h-3 w-3 shrink-0" />
-        <span>{label}</span>
-      </div>
-      <p className="mt-1 truncate text-sm font-medium text-foreground">{value}</p>
-    </div>
   )
 }
 
@@ -467,10 +434,6 @@ function InlineText({ text }: { text: string }) {
       })}
     </>
   )
-}
-
-function countCommands(groups: UserDocsGroup[]): number {
-  return groups.reduce((sum, group) => sum + group.commands.length, 0)
 }
 
 function filterGroups(groups: UserDocsGroup[], query: string): UserDocsGroup[] {

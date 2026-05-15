@@ -33,8 +33,6 @@ const PLACEHOLDERS: Record<DocsSectionId, string> = {
     "# What this CLI does\n\nA short overview your users see first. Mention the problem it solves and any prerequisites.",
   install_md:
     "Notes that go above the install snippets — package size, supported platforms, anything users should know before running the command.",
-  demo_md:
-    "Set up the demo: tell readers what they're about to see and what to watch for.",
   auth_md:
     "How to get credentials, where to store them, who to contact if a token doesn't work.",
   commands_md:
@@ -108,7 +106,7 @@ export function DocsTab({
             User docs
           </h3>
           <p className="text-[10px] text-muted-foreground">
-            Each section is auto-generated from your spec. Override any section on the right — leave it blank to use the auto fallback.
+            Each section is auto-generated from your spec. Override sections with custom text in the editor
           </p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
@@ -180,24 +178,10 @@ export function DocsTab({
                   </button>
                 )
               })}
-            </div>
-
-            {/* Active section editor */}
-            <div className="px-5 py-2 border-b border-border flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-xs font-medium">
-                  {DOCS_SECTIONS.find((s) => s.id === activeSection)?.label} — markdown
-                </p>
-                <p className="text-[10px] text-muted-foreground">
-                  {isOverridden
-                    ? "Custom override. Live in the preview."
-                    : "Using the auto fallback. Type to override."}
-                </p>
-              </div>
               {isOverridden && (
                 <button
                   onClick={() => resetSection(activeSection)}
-                  className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded border border-border shrink-0"
+                  className="ml-auto mr-3 flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded border border-border shrink-0"
                   title="Clear this override and use the auto fallback"
                 >
                   <RotateCcw className="w-3 h-3" />
@@ -214,12 +198,12 @@ export function DocsTab({
               className="flex-1 resize-none font-mono text-xs px-5 py-3 bg-background outline-none border-0 leading-relaxed placeholder:text-muted-foreground/40"
               style={{ tabSize: 2 }}
             />
-            <div className="px-5 py-2 border-t border-border text-[10px] text-muted-foreground">
+            {/* <div className="px-5 py-2 border-t border-border text-[10px] text-muted-foreground">
               Auto fallback:{" "}
               <span className="italic">
                 {activeFallback.length > 120 ? activeFallback.slice(0, 117) + "…" : activeFallback}
               </span>
-            </div>
+            </div> */}
           </div>
         </ResizablePanel>
       </ResizablePanelGroup>

@@ -1,6 +1,4 @@
 import { notFound, redirect } from "next/navigation"
-import Link from "next/link"
-import { Flower, ArrowRight } from "lucide-react"
 import { createClient } from "@/utils/supabase/server"
 import { callPreview, type PreviewResponse } from "@/lib/engine"
 import { DocsPreview } from "@/components/docs/docs-preview"
@@ -83,30 +81,8 @@ export default async function ProjectDocsPage({
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur">
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-1.5">
-            <Flower className="w-4 h-4" style={{ color: "var(--green)" }} />
-            <span className="font-bold tracking-tight text-lg">
-              pe<span style={{ color: "var(--green)" }}>t</span>l
-            </span>
-          </Link>
-          <nav className="flex items-center gap-6 text-sm text-muted-foreground">
-            <span className="text-foreground font-medium">{binaryName}</span>
-            <Link href="/docs" className="hover:text-foreground transition-colors">Platform docs</Link>
-            <Link
-              href="/"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition-colors"
-              style={{ backgroundColor: "var(--green)", color: "#000" }}
-            >
-              Built with petl <ArrowRight className="w-3 h-3" />
-            </Link>
-          </nav>
-        </div>
-      </header>
-
       <main className="max-w-6xl mx-auto">
-        <DocsPreview viewModel={viewModel} />
+        <DocsPreview viewModel={viewModel} rawMarkdownUrl={`/docs/${canonicalSlug || slug}/raw`} />
       </main>
     </div>
   )

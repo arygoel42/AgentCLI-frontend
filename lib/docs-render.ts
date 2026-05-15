@@ -7,7 +7,6 @@ import type { UserDocs } from "@/lib/engine"
 export type DocsOverrides = {
   intro_md: string
   install_md: string
-  demo_md: string
   auth_md: string
   commands_md: string
 }
@@ -15,7 +14,6 @@ export type DocsOverrides = {
 export const DOCS_SECTIONS = [
   { id: "intro_md",    label: "Intro" },
   { id: "install_md",  label: "Install" },
-  { id: "demo_md",     label: "Demo" },
   { id: "auth_md",     label: "Auth" },
   { id: "commands_md", label: "Commands" },
 ] as const
@@ -23,7 +21,7 @@ export const DOCS_SECTIONS = [
 export type DocsSectionId = (typeof DOCS_SECTIONS)[number]["id"]
 
 export function emptyOverrides(): DocsOverrides {
-  return { intro_md: "", install_md: "", demo_md: "", auth_md: "", commands_md: "" }
+  return { intro_md: "", install_md: "", auth_md: "", commands_md: "" }
 }
 
 // parseDocsMd accepts both the new JSON-encoded overrides format and the
@@ -38,7 +36,6 @@ export function parseDocsMd(raw: string): DocsOverrides {
       return {
         intro_md:    typeof parsed.intro_md    === "string" ? parsed.intro_md    : "",
         install_md:  typeof parsed.install_md  === "string" ? parsed.install_md  : "",
-        demo_md:     typeof parsed.demo_md     === "string" ? parsed.demo_md     : "",
         auth_md:     typeof parsed.auth_md     === "string" ? parsed.auth_md     : "",
         commands_md: typeof parsed.commands_md === "string" ? parsed.commands_md : "",
       }
@@ -91,7 +88,6 @@ function defaultOverrides(userDocs: UserDocs, cliName: string): DocsOverrides {
   return {
     intro_md: desc,
     install_md: "Install once, then run any command. The binary self-updates on minor versions.",
-    demo_md: "Try the demo above to see real commands in action — every example is taken straight from the spec.",
     auth_md: userDocs.auth.length > 0
       ? "Set the listed environment variables, or pass the matching flag at the command line. Credentials are never sent anywhere except the upstream API."
       : "This API does not require authentication.",
@@ -136,6 +132,76 @@ function buildInstallSnippets({ repoOwner, repoName, cliName }: DocsContext): In
     })
   }
   return snippets
+}
+
+// renderMarkdown serializes the docs view model as a plain markdown document.
+// Used by the /docs/<slug>/raw route so agents can curl docs without parsing HTML.
+export function renderMarkdown(viewModel: DocsViewModel): string {
+  const { userDocs, install } = viewModel
+  const name = userDocs.cli_name || "CLI"
+  const out: string[] = []
+
+  out.push(`# ${name}${userDocs.version ? ` v${userDocs.version}` : ""}`)
+  out.push("")
+  out.push(resolveSection(viewModel, "intro_md"))
+  out.push("")
+
+  out.push("## Install")
+  out.push("")
+  const installNotes = resolveSection(viewModel, "install_md")
+  if (installNotes.trim()) { out.push(installNotes); out.push("") }
+  for (const s of install) {
+    out.push(`### ${s.label}`)
+    out.push("")
+    out.push("```bash")
+    out.push(s.command)
+    out.push("```")
+    if (s.note) { out.push(""); out.push(s.note) }
+    out.push("")
+  }
+
+  if (userDocs.auth.length > 0) {
+    out.push("## Authentication")
+    out.push("")
+    const authNotes = resolveSection(viewModel, "auth_md")
+    if (authNotes.trim()) { out.push(authNotes); out.push("") }
+    for (const a of userDocs.auth) {
+      const meta = [a.type, a.env_var].filter(Boolean).join(" · ")
+      out.push(`- \`${a.id}\`${meta ? ` — ${meta}` : ""}`)
+      if (a.hint) out.push(`  ${a.hint}`)
+    }
+    out.push("")
+  }
+
+  out.push("## Commands")
+  out.push("")
+  const cmdNotes = resolveSection(viewModel, "commands_md")
+  if (cmdNotes.trim()) { out.push(cmdNotes); out.push("") }
+  for (const g of userDocs.groups) {
+    out.push(`### ${g.name}`)
+    if (g.description) { out.push(""); out.push(g.description) }
+    out.push("")
+    for (const c of g.commands) {
+      out.push(`#### \`${c.name}\` — ${c.http_method.toUpperCase()} ${c.path}`)
+      if (c.description) { out.push(""); out.push(c.description) }
+      out.push("")
+      out.push("```bash")
+      out.push(c.sample)
+      out.push("```")
+      if (c.parameters.length > 0) {
+        out.push("")
+        out.push("Flags:")
+        for (const p of c.parameters) {
+          const bits = [p.type || "value", p.location && `in ${p.location}`, p.required && "required"]
+            .filter(Boolean).join(", ")
+          out.push(`- \`--${p.name}\` (${bits})${p.description ? ` — ${p.description}` : ""}`)
+        }
+      }
+      out.push("")
+    }
+  }
+
+  return out.join("\n").replace(/\n{3,}/g, "\n\n").trim() + "\n"
 }
 
 // slugify reduces a CLI name to a URL-safe slug. Stable for the same input.
