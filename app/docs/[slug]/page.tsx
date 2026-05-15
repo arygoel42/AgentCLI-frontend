@@ -1,10 +1,11 @@
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { Flower, ArrowRight } from "lucide-react"
 import { createClient } from "@/utils/supabase/server"
 import { callPreview, type PreviewResponse } from "@/lib/engine"
 import { DocsPreview } from "@/components/docs/docs-preview"
 import { buildDocsViewModel, slugify } from "@/lib/docs-render"
+import { parseConfig } from "@/lib/parse-yml"
 
 // Per-CLI end-user docs. Looked up by slug derived from the CLI's name.
 // Only renders when the provider has flipped docs_published = true.
@@ -30,8 +31,21 @@ export default async function ProjectDocsPage({
     .from("clis")
     .select("id, name, spec_content, spec_filename, config_yml, docs_md, docs_published, repo_owner, repo_name, preview_json, latest_release_version")
 
-  const cli = (candidates ?? []).find((c) => slugify(c.name) === slug)
+  // The public docs slug is the project/docs name (for example "brev").
+  // Keep accepting the generated binary/config name as a legacy alias, but
+  // redirect it back to the docs slug so shared links are stable.
+  const cli = (candidates ?? []).find((c) => {
+    const binaryName = parseConfig(c.config_yml ?? "").cli?.name ?? c.name
+    const docsSlug = slugify(c.name)
+    return docsSlug === slug || slugify(binaryName) === slug
+  })
   if (!cli || !cli.docs_published) notFound()
+
+  const binaryName = parseConfig(cli.config_yml ?? "").cli?.name ?? cli.name
+  const canonicalSlug = slugify(cli.name)
+  if (canonicalSlug && slug !== canonicalSlug) {
+    redirect(`/docs/${canonicalSlug}`)
+  }
 
   let previewData: PreviewResponse | null = null
   if (cli.preview_json) {
@@ -60,17 +74,17 @@ export default async function ProjectDocsPage({
   const viewModel = buildDocsViewModel({
     userDocs: previewData.user_docs,
     docsMd: cli.docs_md ?? "",
-    cliName: cli.name,
+    cliName: binaryName,
     repoOwner: cli.repo_owner ?? null,
     repoName: cli.repo_name ?? null,
     origin: null,
-    slug,
+    slug: canonicalSlug || slug,
   })
 
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur">
-        <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-1.5">
             <Flower className="w-4 h-4" style={{ color: "var(--green)" }} />
             <span className="font-bold tracking-tight text-lg">
@@ -78,7 +92,7 @@ export default async function ProjectDocsPage({
             </span>
           </Link>
           <nav className="flex items-center gap-6 text-sm text-muted-foreground">
-            <span className="text-foreground font-medium">{cli.name}</span>
+            <span className="text-foreground font-medium">{binaryName}</span>
             <Link href="/docs" className="hover:text-foreground transition-colors">Platform docs</Link>
             <Link
               href="/"
@@ -91,7 +105,7 @@ export default async function ProjectDocsPage({
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto">
+      <main className="max-w-6xl mx-auto">
         <DocsPreview viewModel={viewModel} />
       </main>
     </div>

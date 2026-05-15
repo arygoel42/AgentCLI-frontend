@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, useRef } from "react"
+import { Play, RotateCcw } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface Line {
@@ -13,9 +14,10 @@ interface Props {
   lines: Line[]
   autoPlay?: boolean
   className?: string
+  title?: string
 }
 
-export function InteractiveTerminal({ lines, autoPlay = true, className }: Props) {
+export function InteractiveTerminal({ lines, autoPlay = true, className, title = "petl" }: Props) {
   const [visibleLines, setVisibleLines] = useState<Line[]>([])
   const [typingIndex, setTypingIndex] = useState(0)
   const [typedText, setTypedText] = useState("")
@@ -77,15 +79,19 @@ export function InteractiveTerminal({ lines, autoPlay = true, className }: Props
   const currentLine = lines[typingIndex]
 
   return (
-    <div className={cn("rounded-lg border border-border overflow-hidden", className)}>
+    <div className={cn("rounded-lg border border-border overflow-hidden shadow-sm", className)}>
       <div className="flex items-center gap-2 px-4 py-3 bg-zinc-900 border-b border-zinc-800">
         <div className="w-3 h-3 rounded-full bg-red-500/70" />
         <div className="w-3 h-3 rounded-full bg-yellow-500/70" />
         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "var(--green)", opacity: 0.7 }} />
-        <span className="ml-2 text-xs text-zinc-500 font-mono">petl</span>
+        <span className="ml-2 text-xs text-zinc-400 font-mono truncate">{title}</span>
         {done && (
-          <button onClick={reset} className="ml-auto text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
-            ↺ replay
+          <button
+            onClick={reset}
+            className="ml-auto inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+          >
+            <RotateCcw className="w-3 h-3" />
+            Replay
           </button>
         )}
       </div>
@@ -95,11 +101,11 @@ export function InteractiveTerminal({ lines, autoPlay = true, className }: Props
         {visibleLines.map((line, i) => (
           <div key={i} className="mb-1">
             {line.type === "comment" ? (
-              <span className="text-zinc-600">{line.text}</span>
+              <span className="text-zinc-600 whitespace-pre-wrap">{line.text}</span>
             ) : line.type === "input" ? (
               <span>
                 <span style={{ color: "var(--green)" }}>❯ </span>
-                <span className="text-zinc-200">{line.text}</span>
+                <span className="text-zinc-200 whitespace-pre-wrap break-words">{line.text}</span>
               </span>
             ) : (
               <span className="text-zinc-400 whitespace-pre-wrap">{line.text}</span>
@@ -110,14 +116,18 @@ export function InteractiveTerminal({ lines, autoPlay = true, className }: Props
         {isPlaying && !done && currentLine?.type === "input" && (
           <div>
             <span style={{ color: "var(--green)" }}>❯ </span>
-            <span className="text-zinc-200">{typedText}</span>
+            <span className="text-zinc-200 whitespace-pre-wrap break-words">{typedText}</span>
             <span className="inline-block w-2 h-3.5 bg-zinc-200 ml-0.5 animate-pulse align-text-bottom" />
           </div>
         )}
 
         {!isPlaying && !done && (
-          <button onClick={() => setIsPlaying(true)} className="text-zinc-500 hover:text-zinc-300 transition-colors mt-2">
-            ▶ run demo
+          <button
+            onClick={() => setIsPlaying(true)}
+            className="inline-flex items-center gap-2 rounded border border-zinc-800 px-2.5 py-1.5 text-zinc-500 hover:text-zinc-200 hover:border-zinc-700 transition-colors mt-2"
+          >
+            <Play className="w-3 h-3" />
+            Run demo
           </button>
         )}
       </div>

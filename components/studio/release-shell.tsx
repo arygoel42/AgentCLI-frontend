@@ -23,6 +23,7 @@ type ActionsJob = {
 type ReleaseShellProps = {
   cliId: string
   cliName: string
+  docsName: string
   version: string | null
   latestReleaseVersion: string | null
   latestReleaseUrl: string | null
@@ -215,6 +216,7 @@ function computeInitialStatus(dbStatus: ReleaseStatus): ReleaseStatus {
 export function ReleaseShell({
   cliId,
   cliName,
+  docsName,
   version,
   latestReleaseVersion,
   latestReleaseUrl: initialReleaseUrl,
@@ -229,7 +231,7 @@ export function ReleaseShell({
 }: ReleaseShellProps) {
   const router = useRouter()
   const [docsPublished, setDocsPublishedState] = useState(initialDocsPublished)
-  const docsSlug = slugify(cliName)
+  const docsSlug = slugify(docsName || cliName)
   const docsUrl =
     typeof window !== "undefined" ? `${window.location.origin}/docs/${docsSlug}` : `/docs/${docsSlug}`
 
@@ -415,6 +417,23 @@ export function ReleaseShell({
         <div className="flex-1 overflow-y-auto px-6 py-10">
           <div className="w-full space-y-8">
 
+            {/* User docs publish toggle — always visible. Docs are part of every
+                release; provider can publish before, during, or after binaries
+                go out. */}
+            <DocsPublishCard
+              docsUrl={docsUrl}
+              published={docsPublished}
+              onToggle={async (next) => {
+                setDocsPublishedState(next)
+                try {
+                  await setDocsPublished(cliId, next)
+                } catch (err) {
+                  console.error("[docs publish] failed:", err)
+                  setDocsPublishedState(!next)
+                }
+              }}
+            />
+
             {/* ── In progress — single bar + cycling word ── */}
             {status === "in_progress" && (() => {
               const completedSteps  = actionsJobs.reduce((s, j) => s + j.stepsCompleted, 0)
@@ -565,20 +584,6 @@ export function ReleaseShell({
                       </p>
                     </div>
                   )}
-
-                  <DocsPublishCard
-                    docsUrl={docsUrl}
-                    published={docsPublished}
-                    onToggle={async (next) => {
-                      setDocsPublishedState(next)
-                      try {
-                        await setDocsPublished(cliId, next)
-                      } catch (err) {
-                        console.error("[docs publish] failed:", err)
-                        setDocsPublishedState(!next)
-                      }
-                    }}
-                  />
 
                   {downloadBase && (
                     <div className="space-y-2">
