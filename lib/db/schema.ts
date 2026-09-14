@@ -41,10 +41,10 @@ export const clis = pgTable("clis", {
   provisioningStatus: text("provisioning_status").default("pending").notNull(),
   provisioningError: text("provisioning_error"),
   provisioningStartedAt: timestamp("provisioning_started_at", { withTimezone: true }),
-  // skillNotes is user-authored markdown appended to the auto-rendered llms.txt
+  // skillNotes is user-authored markdown appended to the auto-rendered SKILL.md
   // under a "## Notes" heading at build time. The auto content is regenerated
   // from the spec on every rebuild — only this string is the user's contribution.
-  // Auto-derived llms.txt body is cached in preview_json.llms_text.
+  // Auto-derived SKILL.md body is cached in preview_json.skill_md.
   // (Column kept as `skill_notes` for backwards compat with prior schema.)
   skillNotes: text("skill_notes").default("").notNull(),
   // Release columns — add to Supabase with:

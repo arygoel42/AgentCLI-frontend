@@ -114,10 +114,11 @@ export type UserDocs = {
 export type PreviewResponse = {
   api: PreviewApi
   warnings: string[]
-  // llms_text is the engine-rendered llms.txt body (high-level CLI overview)
-  // that ships at the repo root and is embedded in the binary via
-  // agent-instructions. The studio shows it read-only above the notes editor.
-  llms_text: string
+  // skill_md is the engine-rendered SKILL.md body (high-level CLI overview,
+  // with YAML frontmatter) that ships at the repo root and is embedded in
+  // the binary via agent-instructions. The studio shows it read-only above
+  // the notes editor.
+  skill_md: string
   // user_docs is the structured docs model rendered for the end-user docs
   // site at /docs/<slug>. Always regenerated from the spec on preview.
   user_docs: UserDocs
@@ -179,7 +180,7 @@ function normalizeResponse(raw: any): PreviewResponse {
       })),
     },
     warnings: raw.warnings ?? raw.Warnings ?? [],
-    llms_text: typeof raw.llms_text === "string" ? raw.llms_text : "",
+    skill_md: typeof raw.skill_md === "string" ? raw.skill_md : "",
     user_docs: normalizeUserDocs(raw.user_docs),
   }
 }
@@ -318,7 +319,7 @@ export async function callRelease(
 export type BuildOptions = {
   configYml?: string
   modulePath?: string
-  // notes is plain markdown appended to the auto-rendered SKILL.md / llms.txt
+  // notes is plain markdown appended to the auto-rendered SKILL.md
   // under "## Notes" at build time. Empty string means no notes.
   notes?: string
   // feedbackToken is the per-CLI identifier baked into the generated binary.

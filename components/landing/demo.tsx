@@ -18,10 +18,10 @@ interface Feature {
 
 const FEATURES: Feature[] = [
   {
-    tag: "llms.txt",
+    tag: "SKILL.md",
     title: "Built-in agent discoverability",
     description:
-      "Every generated CLI ships with llms.txt and skills.md so agents can self-discover your entire API surface without reading docs or trial-and-erroring.",
+      "Every generated CLI ships with a SKILL.md so agents can self-discover your entire API surface without reading docs or trial-and-erroring.",
     command: "./acme --help",
     output: [
       { text: "acme  v0.2.1  ·  Acme Payments API", className: "text-zinc-200" },

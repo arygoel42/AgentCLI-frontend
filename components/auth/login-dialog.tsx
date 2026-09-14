@@ -48,7 +48,7 @@ export function LoginDialog({ children }: { children: React.ReactNode }) {
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Sign in to api2cli</DialogTitle>
+          <DialogTitle>Sign in to petl</DialogTitle>
           <DialogDescription>Choose a provider to continue</DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-3 pt-4">

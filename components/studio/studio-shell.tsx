@@ -48,7 +48,7 @@ export function StudioShell({ cli, previewData }: StudioShellProps) {
           specFilename={cli.spec_filename}
           initialConfigYml={cli.config_yml}
           initialSkillNotes={cli.skill_notes}
-          llmsText={previewData.llms_text}
+          skillMd={previewData.skill_md}
           api={previewData.api}
           userDocs={previewData.user_docs}
           initialDocsMd={cli.docs_md}

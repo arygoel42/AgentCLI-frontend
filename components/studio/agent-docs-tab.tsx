@@ -9,12 +9,12 @@ import { saveSkillNotes } from "@/app/dashboard/projects/[id]/actions"
 type AgentDocsTabProps = {
   cliId: string
   initialNotes: string
-  // llmsText is the engine-rendered llms.txt body — same Go template runs at
+  // skillMd is the engine-rendered SKILL.md body — same Go template runs at
   // build time, so this read-only preview matches what gets embedded in the binary.
-  llmsText: string
+  skillMd: string
 }
 
-export function AgentDocsTab({ cliId, initialNotes, llmsText }: AgentDocsTabProps) {
+export function AgentDocsTab({ cliId, initialNotes, skillMd }: AgentDocsTabProps) {
   const [notes, setNotes] = useState<string>(initialNotes)
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
   const lastSavedRef = useRef<string>(initialNotes)
@@ -40,12 +40,12 @@ export function AgentDocsTab({ cliId, initialNotes, llmsText }: AgentDocsTabProp
 
   return (
     <div className="flex-1 min-w-0 flex flex-col">
-      {/* Header strip — auto-rendered llms.txt + user notes */}
+      {/* Header strip — auto-rendered SKILL.md + user notes */}
       <div className="px-5 py-3 border-b border-border flex items-start justify-between gap-4">
         <div className="min-w-0">
           <h3 className="text-sm font-semibold flex items-center gap-2">
             <BookOpen className="w-3.5 h-3.5" />
-             llms.txt
+             SKILL.md
           </h3>
           <p className="text-[10px] text-muted-foreground">
               Auto-generated from your spec on every rebuild and ships with the CLI binary
@@ -77,7 +77,7 @@ export function AgentDocsTab({ cliId, initialNotes, llmsText }: AgentDocsTabProp
               className="flex-1 overflow-auto font-mono text-xs px-5 py-3 leading-relaxed text-muted-foreground whitespace-pre-wrap"
               style={{ tabSize: 2 }}
             >
-              {llmsText || "(no preview available — try saving the project to refresh)"}
+              {skillMd || "(no preview available — try saving the project to refresh)"}
             </pre>
           </div>
         </ResizablePanel>

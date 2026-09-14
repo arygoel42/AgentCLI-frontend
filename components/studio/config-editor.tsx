@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from "react"
 import { toast } from "sonner"
 import {
-  Terminal, Globe, Lock, FolderTree, BookOpen, MessageSquare, BarChart2,
+  Terminal, Globe, FolderTree, BookOpen, MessageSquare, BarChart2,
   Save, Plus, Trash2, GripVertical, ChevronRight, X, Info, Settings, FileText,
 } from "lucide-react"
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
@@ -19,12 +19,11 @@ import type { PreviewApi, Command as ApiCommand, UserDocs } from "@/lib/engine"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Section = "cli" | "environments" | "security" | "resources" | "agent-docs" | "docs" | "feedback" | "observability" | "settings"
+type Section = "cli" | "environments" | "resources" | "agent-docs" | "docs" | "feedback" | "observability" | "settings"
 
 const SECTION_YAML_KEY: Record<string, string> = {
   cli: "cli",
   environments: "environments",
-  security: "security_schemes",
   resources: "resources",
 }
 
@@ -143,37 +142,6 @@ function EnvironmentsSection({ config, onChange }: { config: CliConfig; onChange
       >
         <Plus className="w-3.5 h-3.5" /> Add environment
       </button>
-    </div>
-  )
-}
-
-// ─── Security section (read-only) ────────────────────────────────────────────
-
-function SecuritySection({ api }: { api: PreviewApi }) {
-  const schemes = api.auth ?? []
-  return (
-    <div className="space-y-4">
-      <h3 className="text-sm font-semibold">Security</h3>
-      {schemes.length === 0 ? (
-        <p className="text-xs text-muted-foreground">No authentication schemes detected in this spec.</p>
-      ) : (
-        <div className="space-y-2">
-          {schemes.map((s) => (
-            <div key={s.id} className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
-              <div>
-                <p className="text-xs font-medium">{s.id}</p>
-                <p className="text-xs text-muted-foreground">
-                  {s.type}{s.scheme ? ` · ${s.scheme}` : ""}{s.in ? ` · in ${s.in}` : ""}{s.name ? ` · ${s.name}` : ""}
-                </p>
-              </div>
-              <code className="text-[10px] font-mono text-muted-foreground">{s.env_var}</code>
-            </div>
-          ))}
-        </div>
-      )}
-      <p className="text-xs text-muted-foreground flex items-center gap-1">
-        <Lock className="w-3 h-3" /> Edit security in the YAML panel to make changes.
-      </p>
     </div>
   )
 }
@@ -523,9 +491,8 @@ function ResourcesSection({ config, onChange, api }: { config: CliConfig; onChan
 const NAV_ITEMS: { id: Section; label: string; Icon: React.ComponentType<{ className?: string }> }[] = [
   { id: "cli",            label: "CLI Identity",   Icon: Terminal },
   { id: "environments",   label: "Environments",   Icon: Globe },
-  { id: "security",       label: "Security",       Icon: Lock },
   { id: "resources",      label: "Resources",      Icon: FolderTree },
-  { id: "agent-docs",     label: "llms.txt",       Icon: BookOpen },
+  { id: "agent-docs",     label: "skill.md",       Icon: BookOpen },
   { id: "docs",           label: "Docs",           Icon: FileText },
   { id: "feedback",       label: "Feedback",       Icon: MessageSquare },
   { id: "observability",  label: "Observability",  Icon: BarChart2 },
@@ -538,7 +505,7 @@ type ConfigEditorProps = {
   specFilename: string
   initialConfigYml: string
   initialSkillNotes: string
-  llmsText: string
+  skillMd: string
   api: PreviewApi
   userDocs: UserDocs
   initialDocsMd: string
@@ -549,7 +516,7 @@ type ConfigEditorProps = {
   initialFeedbackEnabled: boolean
 }
 
-export function ConfigEditor({ cliId, cliName, specFilename, initialConfigYml, initialSkillNotes, llmsText, api, userDocs, initialDocsMd, docsPublished, repoOwner, repoName, initialTelemetryEnabled, initialFeedbackEnabled }: ConfigEditorProps) {
+export function ConfigEditor({ cliId, cliName, specFilename, initialConfigYml, initialSkillNotes, skillMd, api, userDocs, initialDocsMd, docsPublished, repoOwner, repoName, initialTelemetryEnabled, initialFeedbackEnabled }: ConfigEditorProps) {
   const [config, setConfig] = useState<CliConfig>(() => parseConfig(initialConfigYml))
   const [yamlStr, setYamlStr] = useState(initialConfigYml)
   const [activeSection, setActiveSection] = useState<Section>("cli")
@@ -651,7 +618,7 @@ export function ConfigEditor({ cliId, cliName, specFilename, initialConfigYml, i
         <AgentDocsTab
           cliId={cliId}
           initialNotes={initialSkillNotes}
-          llmsText={llmsText}
+          skillMd={skillMd}
         />
       ) : activeSection === "docs" ? (
         <DocsTab
@@ -682,7 +649,6 @@ export function ConfigEditor({ cliId, cliName, specFilename, initialConfigYml, i
               <div className="p-6 max-w-xl">
                 {activeSection === "cli"          && <CliSection config={config} onChange={updateConfig} />}
                 {activeSection === "environments" && <EnvironmentsSection config={config} onChange={updateConfig} />}
-                {activeSection === "security"     && <SecuritySection api={api} />}
                 {activeSection === "resources"    && <ResourcesSection config={config} onChange={updateConfig} api={api} />}
               </div>
             </div>

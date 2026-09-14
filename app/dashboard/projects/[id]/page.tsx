@@ -44,12 +44,12 @@ export default async function ProjectPage({
     }
   }
 
-  // Backfill: previews stored before the engine started returning llms_text or
-  // user_docs will lack them. Re-render once and persist so subsequent loads
-  // are cheap.
+  // Backfill: previews stored before the engine started returning skill_md
+  // (or before the llms_text → skill_md rename) or user_docs will lack them.
+  // Re-render once and persist so subsequent loads are cheap.
   const needsBackfill =
     previewData && cli.spec_content &&
-    (!previewData.llms_text || !previewData.user_docs?.groups)
+    (!previewData.skill_md || !previewData.user_docs?.groups)
 
   if (needsBackfill) {
     try {

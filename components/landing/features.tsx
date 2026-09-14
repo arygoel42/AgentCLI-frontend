@@ -8,11 +8,11 @@ const features = [
     agent: false,
   },
   {
-    tag: "llms.txt + skills.md",
+    tag: "SKILL.md",
     title: "Built-in agent discoverability",
     description:
-      "Every generated CLI ships with llms.txt and skills.md so agents can self-discover your entire API surface without reading docs or trial-and-erroring.",
-    example: "curl https://your-api.com/llms.txt",
+      "Every generated CLI ships with a SKILL.md so agents can self-discover your entire API surface without reading docs or trial-and-erroring.",
+    example: "./your-cli agent-instructions",
     agent: true,
   },
   {
