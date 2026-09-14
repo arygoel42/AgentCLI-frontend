@@ -58,8 +58,13 @@ export async function createProject(formData: FormData): Promise<{ id: string } 
   if (nameTakenInDb && nameTakenInDb.length > 0) {
     return { error: `Project name "${projectName}" is already taken` }
   }
-  if (await repoExists(projectName)) {
-    return { error: `A repo named "${projectName}" already exists in the org` }
+  try {
+    if (await repoExists(projectName)) {
+      return { error: `A repo named "${projectName}" already exists in the org` }
+    }
+  } catch (err) {
+    console.error("[createProject] repoExists check failed:", err)
+    return { error: "Couldn't reach GitHub to verify the project name. Please try again shortly." }
   }
 
   // Build IR + default yml. Fast (just parser + template-driven serialization).

@@ -31,30 +31,35 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const githubUserId = githubProfile?.id != null ? String(githubProfile.id) : null
 
       console.log("[auth] signIn callback fired for:", user.email, "gh:", githubUsername)
-      const supabase = createClient()
-      const { data: existing, error: selectError } = await supabase
-        .from("providers")
-        .select("id, github_username")
-        .eq("email", user.email)
-        .limit(1)
 
-      if (selectError) console.error("[auth] signIn select error:", selectError)
-
-      if (!existing || existing.length === 0) {
-        const { error: insertError } = await supabase.from("providers").insert({
-          email: user.email,
-          name: user.name ?? null,
-          avatar_url: user.image ?? null,
-          github_username: githubUsername,
-          github_user_id: githubUserId,
-        })
-        if (insertError) console.error("[auth] signIn insert error:", insertError)
-      } else if (githubUsername && existing[0].github_username !== githubUsername) {
-        const { error: updateError } = await supabase
+      try {
+        const supabase = createClient()
+        const { data: existing, error: selectError } = await supabase
           .from("providers")
-          .update({ github_username: githubUsername, github_user_id: githubUserId })
+          .select("id, github_username")
           .eq("email", user.email)
-        if (updateError) console.error("[auth] signIn update error:", updateError)
+          .limit(1)
+
+        if (selectError) console.error("[auth] signIn select error:", selectError)
+
+        if (!existing || existing.length === 0) {
+          const { error: insertError } = await supabase.from("providers").insert({
+            email: user.email,
+            name: user.name ?? null,
+            avatar_url: user.image ?? null,
+            github_username: githubUsername,
+            github_user_id: githubUserId,
+          })
+          if (insertError) console.error("[auth] signIn insert error:", insertError)
+        } else if (githubUsername && existing[0].github_username !== githubUsername) {
+          const { error: updateError } = await supabase
+            .from("providers")
+            .update({ github_username: githubUsername, github_user_id: githubUserId })
+            .eq("email", user.email)
+          if (updateError) console.error("[auth] signIn update error:", updateError)
+        }
+      } catch (err) {
+        console.error("[auth] signIn Supabase error:", err)
       }
 
       return true
