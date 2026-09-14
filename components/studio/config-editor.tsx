@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect, useRef } from "react"
 import { toast } from "sonner"
 import {
   Terminal, Globe, FolderTree, BookOpen, MessageSquare, BarChart2,
-  Save, Plus, Trash2, GripVertical, ChevronRight, X, Info, Settings, FileText,
+  Save, Plus, Trash2, GripVertical, ChevronRight, X, Info, Settings,
 } from "lucide-react"
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
 import { YamlPanel } from "./yaml-panel"
@@ -493,7 +493,7 @@ const NAV_ITEMS: { id: Section; label: string; Icon: React.ComponentType<{ class
   { id: "environments",   label: "Environments",   Icon: Globe },
   { id: "resources",      label: "Resources",      Icon: FolderTree },
   { id: "agent-docs",     label: "skill.md",       Icon: BookOpen },
-  { id: "docs",           label: "Docs",           Icon: FileText },
+  // { id: "docs",        label: "Docs",           Icon: FileText },  // disabled — see docs page
   { id: "feedback",       label: "Feedback",       Icon: MessageSquare },
   { id: "observability",  label: "Observability",  Icon: BarChart2 },
   { id: "settings",       label: "Settings",       Icon: Settings },
