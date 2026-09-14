@@ -35,7 +35,7 @@ export function NewProjectButton() {
             </DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground -mt-2">
-            Paste a URL or upload a file — we&apos;ll generate a CLI for it.
+            Upload a file — we&apos;ll generate a CLI for it.
           </p>
           <UploadSpecForm onSuccess={handleSuccess} />
         </DialogContent>

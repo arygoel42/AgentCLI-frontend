@@ -3,7 +3,7 @@
 import { useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { Activity, FileCode2, Link2, Loader2, MessageSquare, Trash2, Upload } from "lucide-react"
+import { Activity, FileCode2, Loader2, MessageSquare, Trash2, Upload } from "lucide-react"
 import { saveDataSettings, deleteProject, updateSpec } from "@/app/dashboard/projects/[id]/actions"
 import {
   AlertDialog,
@@ -52,16 +52,15 @@ function UpdateSpecSheet({ cliId, specFilename }: { cliId: string; specFilename:
   const router = useRouter()
   const fileRef = useRef<HTMLInputElement>(null)
   const [open, setOpen] = useState(false)
-  const [specUrl, setSpecUrl] = useState("")
   const [fileName, setFileName] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const canSubmit = specUrl.trim().length > 0 || fileName !== null
+  const canSubmit = fileName !== null
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    if (file) { setFileName(file.name); setSpecUrl("") }
+    if (file) setFileName(file.name)
   }
 
   async function handleSubmit() {
@@ -72,8 +71,6 @@ function UpdateSpecSheet({ cliId, specFilename }: { cliId: string; specFilename:
     const file = fileRef.current?.files?.[0]
     if (file) {
       fd.append("specFile", file)
-    } else if (specUrl.trim()) {
-      fd.append("specUrl", specUrl.trim())
     }
     try {
       await updateSpec(cliId, fd)
@@ -88,7 +85,7 @@ function UpdateSpecSheet({ cliId, specFilename }: { cliId: string; specFilename:
   }
 
   function handleOpenChange(next: boolean) {
-    if (!next) { setSpecUrl(""); setFileName(null); setError(null) }
+    if (!next) { setFileName(null); setError(null) }
     setOpen(next)
   }
 
@@ -108,22 +105,6 @@ function UpdateSpecSheet({ cliId, specFilename }: { cliId: string; specFilename:
           </SheetDescription>
         </SheetHeader>
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
-          <div className="relative">
-            <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              type="url"
-              value={specUrl}
-              onChange={(e) => { setSpecUrl(e.target.value); setFileName(null) }}
-              placeholder="https://api.example.com/openapi.json"
-              disabled={pending}
-              className="w-full rounded-md border border-border bg-background pl-9 pr-3 py-2 text-sm outline-none focus:border-foreground/40 disabled:opacity-50"
-            />
-          </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <div className="h-px flex-1 bg-border" />
-            <span>OR</span>
-            <div className="h-px flex-1 bg-border" />
-          </div>
           <label className={`flex items-center justify-center gap-2 w-full rounded-md border border-dashed border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors ${pending ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}>
             <Upload className="w-4 h-4" />
             {fileName ?? "Upload a .json or .yaml file"}

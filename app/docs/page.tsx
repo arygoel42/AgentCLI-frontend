@@ -4,6 +4,7 @@ import { InteractiveTerminal } from "@/components/docs/terminal"
 import { ApiExplorer } from "@/components/docs/api-explorer"
 import Link from "next/link"
 import { ArrowRight, Flower } from "lucide-react"
+import { notFound } from "next/navigation"
 
 // Terminal demo lines
 
@@ -101,6 +102,9 @@ const COMMANDS_RESPONSE = `{
 // Page
 
 export default function DocsPage() {
+  // Docs page temporarily disabled — content below is kept as-is for a later revisit.
+  notFound()
+
   return (
     <div className="min-h-screen bg-background">
       {/* Top bar */}

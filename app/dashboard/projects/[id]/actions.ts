@@ -101,7 +101,6 @@ export async function updateSpec(cliId: string, formData: FormData): Promise<voi
   const { supabase } = await getOwnedCli(cliId)
 
   const specFile = formData.get("specFile") as File | null
-  const specUrl = (formData.get("specUrl") as string | null)?.trim()
 
   let specContent: string
   let specFilename: string
@@ -109,15 +108,8 @@ export async function updateSpec(cliId: string, formData: FormData): Promise<voi
   if (specFile && specFile.size > 0) {
     specContent = await specFile.text()
     specFilename = specFile.name
-  } else if (specUrl) {
-    const res = await fetch(specUrl)
-    if (!res.ok) throw new Error(`Failed to fetch spec: ${res.statusText}`)
-    specContent = await res.text()
-    const urlPath = new URL(specUrl).pathname
-    const lastSegment = urlPath.split("/").filter(Boolean).pop() ?? "openapi"
-    specFilename = lastSegment.includes(".") ? lastSegment : `${lastSegment}.yaml`
   } else {
-    throw new Error("Provide a spec file or URL")
+    throw new Error("Provide a spec file")
   }
 
   const { data: cli } = await supabase

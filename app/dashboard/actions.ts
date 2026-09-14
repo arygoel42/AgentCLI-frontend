@@ -30,7 +30,6 @@ export async function createProject(formData: FormData): Promise<{ id: string } 
   if (nameError) return { error: nameError }
 
   const specFile = formData.get("specFile") as File | null
-  const specUrl = (formData.get("specUrl") as string | null)?.trim()
 
   let specContent: string
   let specFilename: string
@@ -38,15 +37,8 @@ export async function createProject(formData: FormData): Promise<{ id: string } 
   if (specFile && specFile.size > 0) {
     specContent = await specFile.text()
     specFilename = specFile.name
-  } else if (specUrl) {
-    const res = await fetch(specUrl)
-    if (!res.ok) return { error: `Failed to fetch spec from URL: ${res.statusText}` }
-    specContent = await res.text()
-    const urlPath = new URL(specUrl).pathname
-    const lastSegment = urlPath.split("/").filter(Boolean).pop() ?? "openapi"
-    specFilename = lastSegment.includes(".") ? lastSegment : `${lastSegment}.yaml`
   } else {
-    return { error: "Please provide a spec file or URL" }
+    return { error: "Please provide a spec file" }
   }
 
   // Fail fast on name collisions before anyone leaves the dashboard.

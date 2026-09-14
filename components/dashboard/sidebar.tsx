@@ -3,14 +3,13 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
-import { FolderOpen, Settings, LogOut, KeyRound, PanelLeftClose, PanelLeftOpen } from "lucide-react"
+import { FolderOpen, Settings, LogOut, PanelLeftClose, PanelLeftOpen } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
 import { ThemeToggle } from "@/components/theme-toggle"
 
 const nav = [
   { href: "/dashboard", label: "Projects", icon: FolderOpen },
-  { href: "/dashboard/api-key", label: "API Key", icon: KeyRound },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ]
 

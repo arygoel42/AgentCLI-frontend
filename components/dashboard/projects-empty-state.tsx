@@ -1,6 +1,6 @@
 "use client"
 
-import { Terminal, ArrowRight, Upload } from "lucide-react"
+import { Terminal, Upload } from "lucide-react"
 import { CopyButton } from "./copy-button"
 import { UploadSpecForm } from "./upload-spec-form"
 
@@ -17,7 +17,7 @@ export function ProjectsEmptyState() {
         </div>
         <h2 className="text-base font-semibold">Upload your OpenAPI spec</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Paste a URL or upload a file — we&apos;ll generate a CLI for it.
+          Upload a file — we&apos;ll generate a CLI for it.
         </p>
 
         <div className="mt-5 flex-1">
@@ -58,14 +58,6 @@ export function ProjectsEmptyState() {
             </div>
           </div>
         </div>
-
-        <a
-          href="/docs"
-          className="mt-5 flex items-center justify-center gap-2 w-full rounded-md border border-border py-2.5 text-sm font-medium hover:bg-muted transition-colors"
-        >
-          Read the docs
-          <ArrowRight className="w-4 h-4" />
-        </a>
       </div>
     </div>
   )
