@@ -47,6 +47,35 @@ export async function saveConfig(cliId: string, configYml: string): Promise<void
   if (error) throw new Error(error.message)
 }
 
+// refreshSkillPreview re-renders the skill.md preview from the current spec +
+// configYml (same engine call used at project creation) and persists it to
+// preview_json so the cache doesn't go stale after a CLI Identity/Environments/
+// Resources edit. Called after saveConfig settles; failures here must never
+// block or surface as a config save error — the real generated CLI always
+// reads config_yml fresh at Build/Release regardless of this cache.
+export async function refreshSkillPreview(cliId: string, configYml: string): Promise<string> {
+  const { supabase } = await getOwnedCli(cliId)
+
+  const { data: cli } = await supabase
+    .from("clis")
+    .select("spec_content, spec_filename")
+    .eq("id", cliId)
+    .single()
+
+  if (!cli?.spec_content || !cli.spec_filename) throw new Error("No spec on file")
+
+  const previewData = await callPreview(cli.spec_content, cli.spec_filename, configYml)
+
+  const { error } = await supabase
+    .from("clis")
+    .update({ preview_json: JSON.stringify(previewData) })
+    .eq("id", cliId)
+
+  if (error) throw new Error(error.message)
+
+  return previewData.skill_md
+}
+
 export async function saveDocsMd(cliId: string, md: string): Promise<void> {
   const { supabase } = await getOwnedCli(cliId)
 

@@ -14,7 +14,7 @@ import { FeedbackTab } from "./feedback-tab"
 import { ObservabilityTab } from "./observability-tab"
 import { SettingsTab } from "./settings-tab"
 import { parseConfig, serializeConfig, type CliConfig, type ResourceNode } from "@/lib/parse-yml"
-import { saveConfig } from "@/app/dashboard/projects/[id]/actions"
+import { saveConfig, refreshSkillPreview } from "@/app/dashboard/projects/[id]/actions"
 import type { PreviewApi, Command as ApiCommand, UserDocs } from "@/lib/engine"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -505,7 +505,7 @@ type ConfigEditorProps = {
   specFilename: string
   initialConfigYml: string
   initialSkillNotes: string
-  skillMd: string
+  initialSkillMd: string
   api: PreviewApi
   userDocs: UserDocs
   initialDocsMd: string
@@ -516,11 +516,12 @@ type ConfigEditorProps = {
   initialFeedbackEnabled: boolean
 }
 
-export function ConfigEditor({ cliId, cliName, specFilename, initialConfigYml, initialSkillNotes, skillMd, api, userDocs, initialDocsMd, docsPublished, repoOwner, repoName, initialTelemetryEnabled, initialFeedbackEnabled }: ConfigEditorProps) {
+export function ConfigEditor({ cliId, cliName, specFilename, initialConfigYml, initialSkillNotes, initialSkillMd, api, userDocs, initialDocsMd, docsPublished, repoOwner, repoName, initialTelemetryEnabled, initialFeedbackEnabled }: ConfigEditorProps) {
   const [config, setConfig] = useState<CliConfig>(() => parseConfig(initialConfigYml))
   const [yamlStr, setYamlStr] = useState(initialConfigYml)
   const [activeSection, setActiveSection] = useState<Section>("cli")
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
+  const [skillMd, setSkillMd] = useState(initialSkillMd)
   const lastSavedRef = useRef(initialConfigYml)
 
   // Sync state when the server pushes new props after a spec update + router.refresh().
@@ -532,7 +533,16 @@ export function ConfigEditor({ cliId, cliName, specFilename, initialConfigYml, i
     setSaveStatus("idle")
   }, [initialConfigYml])
 
-  // Autosave: debounce yml changes by 800ms, then write to DB.
+  useEffect(() => {
+    setSkillMd(initialSkillMd)
+  }, [initialSkillMd])
+
+  // Autosave: debounce yml changes by 800ms, then write to DB. Once that
+  // settles, re-render the skill.md preview from the same (now-current) yml
+  // so the preview pane never shows a stale CLI name/resources — see
+  // refreshSkillPreview's doc comment. This must never fail the config save
+  // itself: the real generated CLI always reads config_yml fresh at Build
+  // time regardless of whether this preview refresh succeeds.
   useEffect(() => {
     if (yamlStr === lastSavedRef.current) return
     setSaveStatus("saving")
@@ -545,6 +555,13 @@ export function ConfigEditor({ cliId, cliName, specFilename, initialConfigYml, i
         console.error("[autosave] failed:", err)
         setSaveStatus("error")
         toast.error(err instanceof Error ? err.message : "Autosave failed")
+        return
+      }
+      try {
+        const freshSkillMd = await refreshSkillPreview(cliId, yamlStr)
+        setSkillMd(freshSkillMd)
+      } catch (err) {
+        console.error("[skill.md preview refresh] failed:", err)
       }
     }, 800)
     return () => clearTimeout(timer)
